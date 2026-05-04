@@ -1,6 +1,7 @@
 type TemperatureDisplayProps = {
   city: string;
   maxTemperature: number;
+  displayTemperature?: number;
   width: number;
   height: number;
 };
@@ -8,6 +9,7 @@ type TemperatureDisplayProps = {
 export function TemperatureDisplay({
   city,
   maxTemperature,
+  displayTemperature = maxTemperature,
   width,
   height,
 }: TemperatureDisplayProps) {
@@ -58,7 +60,7 @@ export function TemperatureDisplay({
           alignItems: "flex-start",
         }}
       >
-        {Math.round(maxTemperature)}
+        {Math.round(displayTemperature)}
         <span
           style={{
             fontSize: tempFontSize * 0.55,

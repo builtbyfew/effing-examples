@@ -4,7 +4,7 @@ import { fnUrl } from "@effing/fn";
 import type { RunnerArgs, EffieRunnerReturn } from "@effing/fn";
 import type { PelicanOnBikeProps } from "~/annies/pelican-on-bike.fn";
 import type { WeatherBackgroundProps } from "~/annies/weather-background.fn";
-import type { TemperatureDisplayImageProps } from "~/images/temperature-display.fn";
+import type { TemperatureDisplayAnnieProps } from "~/annies/temperature-display.fn";
 import type { DayBadgeImageProps } from "~/images/day-badge.fn";
 import type { WeatherPelicansCoverProps } from "~/images/weather-pelicans-cover.fn";
 
@@ -32,7 +32,7 @@ export const previewProps: WeatherPelicansProps = {
     { date: "2026-05-07", maxTemperature: 11, wmoCode: 45 },
     { date: "2026-05-08", maxTemperature: 13, wmoCode: 53 },
     { date: "2026-05-09", maxTemperature: 14, wmoCode: 63 },
-    { date: "2026-05-10", maxTemperature: 2, wmoCode: 73 },
+    { date: "2026-05-10", maxTemperature: -6, wmoCode: 73 },
     { date: "2026-05-11", maxTemperature: 16, wmoCode: 95 },
   ],
 };
@@ -82,6 +82,8 @@ export async function runner({
 
   const segments = await Promise.all(
     days.map(async (day, i) => {
+      const transitionLeadIn = i > 0 ? TRANSITION_DURATION : 0;
+      const overlayDuration = SEGMENT_DURATION - transitionLeadIn;
       const [weatherUrl, tempUrl, badgeUrl] = await Promise.all([
         fnUrl(
           "annie",
@@ -93,12 +95,13 @@ export async function runner({
           { width, height },
         ),
         fnUrl(
-          "image",
+          "annie",
           "temperature-display",
           {
             city,
             maxTemperature: day.maxTemperature,
-          } satisfies TemperatureDisplayImageProps,
+            frameCount: Math.round(overlayDuration * FPS),
+          } satisfies TemperatureDisplayAnnieProps,
           { width, height },
         ),
         fnUrl(
@@ -125,13 +128,15 @@ export async function runner({
           { type: "animation", source: weatherUrl },
           { type: "animation", source: "#pelican" },
           {
-            type: "image",
+            type: "animation",
             source: tempUrl,
+            delay: transitionLeadIn,
             effects: [{ type: "fade-in", start: 0, duration: 0.4 }],
           },
           {
             type: "image",
             source: badgeUrl,
+            delay: transitionLeadIn,
             effects: [{ type: "fade-in", start: 0.2, duration: 0.4 }],
           },
         ],
