@@ -44,12 +44,12 @@ export function PelicanOnBike({
     y: BB.cy - CRANK_LEN * Math.sin(crankRad),
   };
 
-  const wingFlap = Math.sin(progress * Math.PI * 8) * 1.4;
-  const beakOpen = Math.max(0, Math.sin(progress * Math.PI * 6 - 0.3));
+  const wingFlap = Math.sin((progress * Math.PI * 28) / 3) * 1.4;
+  const beakOpen = Math.max(0, Math.sin(progress * Math.PI * 7 - 0.3));
   const blink = blinkAmount(progress);
-  const crestWiggle = Math.sin(progress * Math.PI * 12) * 1.0;
-  const pouchSway = Math.sin(progress * Math.PI * 4) * 0.8;
-  const tailTwitch = Math.sin(progress * Math.PI * 4 + Math.PI) * 1.3;
+  const crestWiggle = Math.sin(progress * Math.PI * 14) * 1.0;
+  const pouchSway = Math.sin((progress * Math.PI * 14) / 3) * 0.8;
+  const tailTwitch = Math.sin((progress * Math.PI * 14) / 3 + Math.PI) * 1.3;
 
   return (
     <svg
@@ -176,7 +176,7 @@ function SpeedLines({ progress }: { progress: number }) {
     { y: 70, len: 16, alpha: 0.34, off: 0.45 },
     { y: 116, len: 12, alpha: 0.28, off: 0.18 },
   ];
-  const phase = (progress * 4) % 1;
+  const phase = ((progress * 14) / 3) % 1;
   return (
     <g>
       {params.map((p, i) => {

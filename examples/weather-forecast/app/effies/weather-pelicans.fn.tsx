@@ -37,7 +37,7 @@ export const previewProps: WeatherPelicansProps = {
   ],
 };
 
-const SEGMENT_DURATION = 3;
+const SEGMENT_DURATION = 3.5;
 const FPS = 30;
 const TRANSITION_DURATION = 0.5;
 
@@ -74,7 +74,7 @@ export async function runner({
     "pelican-on-bike",
     {
       frameCount: SEGMENT_DURATION * FPS,
-      wheelTurns: 2,
+      wheelTurns: 7 / 3,
       bobAmplitude: 8,
     } satisfies PelicanOnBikeProps,
     { width, height },
@@ -119,7 +119,7 @@ export async function runner({
         transition:
           i > 0
             ? {
-                type: "slide",
+                type: "wipe",
                 direction: "left",
                 duration: TRANSITION_DURATION,
               }
