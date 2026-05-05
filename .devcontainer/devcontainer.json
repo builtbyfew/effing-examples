@@ -5,11 +5,7 @@
     "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
     "ghcr.io/devcontainers/features/node:1": { "version": "lts" }
   },
-  "mounts": [
-    "source=effing-examples-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
-    "source=effing-examples-pnpm-store,target=${containerWorkspaceFolder}/.pnpm-store,type=volume"
-  ],
-  "postCreateCommand": "sudo chown vscode:vscode node_modules .pnpm-store && export COREPACK_ENABLE_DOWNLOAD_PROMPT=0 && corepack enable && pnpm install --config.confirm-modules-purge=false",
+  "postCreateCommand": "export COREPACK_ENABLE_DOWNLOAD_PROMPT=0 && corepack enable && pnpm install",
   "forwardPorts": [3839, 2000],
   "portsAttributes": {
     "3839": { "label": "pnpm dev", "onAutoForward": "notify" },
