@@ -57,8 +57,8 @@ export const previewProps: ListingPromoBasicProps = {
     },
     {
       pills: [
-        { text: "132 Rooms", variant: "light" },
-        { text: "35 Bathrooms", variant: "light" },
+        { text: "132 rooms", variant: "light" },
+        { text: "35 bathrooms", variant: "light" },
         { text: "55,000 sqft", variant: "dark" },
       ],
       imageUrls: [
@@ -69,7 +69,7 @@ export const previewProps: ListingPromoBasicProps = {
     {
       pills: [
         { text: "Built in 1800", variant: "light" },
-        { text: "Bunker Included", variant: "light" },
+        { text: "Bunker included", variant: "light" },
         { text: "$398,000,000", variant: "dark" },
       ],
       imageUrls: [
