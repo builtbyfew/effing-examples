@@ -82,7 +82,7 @@ export const previewProps: ListingPromoBasicProps = {
     photoUrl: "https://i.pravatar.cc/600?img=44",
     name: "Margaret Beaumont",
     company: "Capitop Realty Group",
-    phone: "+32 9 296 11 11",
+    phone: "+1 (202) 555-0100",
     email: "margaret@capitop.estate",
   },
 };
