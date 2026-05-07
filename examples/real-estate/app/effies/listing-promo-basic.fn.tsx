@@ -96,6 +96,9 @@ const PILL_SLIDE_DURATION = 0.45;
 const PILL_STAGGER = 0.1;
 const PILL_FADE_OUT_DURATION = 0.28;
 const PILL_FADE_OUT_LEAD = 0.28;
+// Hold pill slide-ins until the incoming wipe is done so the transition
+// doesn't visually swallow the entrance.
+const PILL_SLIDE_IN_DELAY_AFTER_TRANSITION = TRANSITION_DURATION;
 const WIPE_LEFT_TRANSITION: EffieTransition = {
   type: "wipe",
   direction: "left",
@@ -184,6 +187,7 @@ export async function runner({
 
   const photoSegments = await Promise.all(
     slides.map(async (slide, i) => {
+      const hasIncomingTransition = i > 0;
       const pillsChangedFromPrevious =
         i === 0 || !samePills(slides[i - 1].pills, slide.pills);
       const pillsChangeAfterThis =
@@ -202,6 +206,9 @@ export async function runner({
         bounds: { width, height },
       });
 
+      const slideInBase = hasIncomingTransition
+        ? PILL_SLIDE_IN_DELAY_AFTER_TRANSITION
+        : 0;
       const pillLayers = await Promise.all(
         slide.pills.map((_, pillIndex) =>
           buildPillLayer({
@@ -211,6 +218,7 @@ export async function runner({
             bounds: { width, height },
             shouldSlideIn: pillsChangedFromPrevious,
             shouldFadeOut: pillsChangeAfterThis,
+            slideInBase,
             fadeOutStart: pillFadeOutStart(photoDuration),
           }),
         ),
@@ -218,9 +226,7 @@ export async function runner({
 
       return effieSegment({
         duration: photoDuration,
-        ...(i === 0
-          ? {}
-          : { transition: WIPE_LEFT_TRANSITION }),
+        ...(hasIncomingTransition ? { transition: WIPE_LEFT_TRANSITION } : {}),
         layers: [photoLayer, gradientLayer, ...pillLayers],
       });
     }),
@@ -348,6 +354,7 @@ async function buildPillLayer({
   bounds,
   shouldSlideIn,
   shouldFadeOut,
+  slideInBase,
   fadeOutStart,
 }: {
   slide: Slide;
@@ -356,6 +363,7 @@ async function buildPillLayer({
   bounds: Bounds;
   shouldSlideIn: boolean;
   shouldFadeOut: boolean;
+  slideInBase: number;
   fadeOutStart: number;
 }): Promise<ImageLayer> {
   const layer: ImageLayer = {
@@ -373,7 +381,7 @@ async function buildPillLayer({
   };
 
   const effects: EffieEffect[] = [];
-  const slideStart = pillIndex * PILL_STAGGER;
+  const slideStart = slideInBase + pillIndex * PILL_STAGGER;
 
   if (shouldSlideIn) {
     layer.motion = slideMotion({
