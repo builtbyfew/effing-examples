@@ -2,6 +2,7 @@ import { z } from "zod";
 import { effieData, effieSegment, effieWebUrl } from "@effing/effie";
 import { fnUrl } from "@effing/fn";
 import type { EffieRunnerReturn, RunnerArgs } from "@effing/fn";
+import type { GrainProps } from "~/annies/grain.fn";
 import type { WantedPosterProps } from "~/images/wanted-poster.fn";
 
 export const propsSchema = z.object({
@@ -34,12 +35,20 @@ export async function runner({
   },
   bounds: { width, height },
 }: RunnerArgs<MostWantedPosterProps>): EffieRunnerReturn {
-  const posterSource = await fnUrl(
-    "image",
-    "wanted-poster",
-    { topText, bottomText, footerText } satisfies WantedPosterProps,
-    { width, height },
-  );
+  const [posterSource, grainSource] = await Promise.all([
+    fnUrl(
+      "image",
+      "wanted-poster",
+      { topText, bottomText, footerText } satisfies WantedPosterProps,
+      { width, height },
+    ),
+    fnUrl(
+      "annie",
+      "grain",
+      { duration, fps: FPS, intensity: 0.7 } satisfies GrainProps,
+      { width, height },
+    ),
+  ]);
 
   return effieData({
     width,
@@ -50,7 +59,10 @@ export async function runner({
     segments: [
       effieSegment({
         duration,
-        layers: [{ type: "image", source: posterSource }],
+        layers: [
+          { type: "animation", source: grainSource },
+          { type: "image", source: posterSource },
+        ],
       }),
     ],
   });
