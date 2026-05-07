@@ -20,7 +20,7 @@ export type ListingPromoPillsProps = z.infer<typeof propsSchema>;
 export const previewProps: ListingPromoPillsProps = {
   pills: [
     { text: "JUST LISTED", variant: "dark" },
-    { text: "Marbella, Spain 29602", variant: "light" },
+    { text: "Washington, DC", variant: "light" },
   ],
   fontSize: 64,
 };

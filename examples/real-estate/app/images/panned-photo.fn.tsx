@@ -14,10 +14,11 @@ export const propsSchema = z.object({
 export type PannedPhotoProps = z.infer<typeof propsSchema>;
 
 export const previewProps: PannedPhotoProps = {
-  imageUrl: "https://static.effing.dev/picsum/1080/1920/water.jpg",
+  imageUrl:
+    "https://static.effing.dev/fake-white-house/fake-white-house-drone-shot.jpg",
   direction: "left",
   distance: 0.15,
-  oversize: 1.2,
+  oversize: 1.0,
   progress: 1,
 };
 

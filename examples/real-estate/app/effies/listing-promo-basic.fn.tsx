@@ -12,6 +12,7 @@ import type { Bounds, EffieRunnerReturn, RunnerArgs } from "@effing/fn";
 import type { ListingPromoCoverProps } from "~/images/listing-promo-cover.fn";
 import type { ListingPromoPillsProps } from "~/images/listing-promo-pills.fn";
 import type { PannedPhotoProps } from "~/images/panned-photo.fn";
+import type { PhotoGradientProps } from "~/images/photo-gradient.fn";
 import type { RealtorCardImageProps } from "~/images/realtor-card.fn";
 
 const pillSchema = z.object({
@@ -48,39 +49,41 @@ export const previewProps: ListingPromoBasicProps = {
     {
       pills: [
         { text: "JUST LISTED", variant: "dark" },
-        { text: "Marbella, Spain 29602", variant: "light" },
-      ],
-      imageUrls: ["https://static.effing.dev/unsplash/white-villa/portrait.jpg"],
-    },
-    {
-      pills: [
-        { text: "5 Bedrooms", variant: "light" },
-        { text: "4 Bathrooms", variant: "light" },
-        { text: "3,800 sqft", variant: "dark" },
+        { text: "Washington, DC", variant: "light" },
       ],
       imageUrls: [
-        "https://static.effing.dev/unsplash/white-villa/bedroom.jpg",
-        "https://static.effing.dev/unsplash/white-villa/bathroom.jpg",
+        "https://static.effing.dev/fake-white-house/fake-white-house-facade.jpg",
       ],
     },
     {
       pills: [
-        { text: "Built in 2019", variant: "light" },
-        { text: "Heated Pool", variant: "light" },
-        { text: "€2,450,000", variant: "dark" },
+        { text: "132 Rooms", variant: "light" },
+        { text: "35 Bathrooms", variant: "light" },
+        { text: "55,000 sqft", variant: "dark" },
       ],
       imageUrls: [
-        "https://static.effing.dev/unsplash/white-villa/wide.jpg",
-        "https://static.effing.dev/unsplash/white-villa/elevated.jpg",
+        "https://static.effing.dev/fake-white-house/fake-white-house-oval-office.jpg",
+        "https://static.effing.dev/fake-white-house/fake-white-house-press-room.jpg",
+      ],
+    },
+    {
+      pills: [
+        { text: "Built in 1800", variant: "light" },
+        { text: "Bunker Included", variant: "light" },
+        { text: "$398,000,000", variant: "dark" },
+      ],
+      imageUrls: [
+        "https://static.effing.dev/fake-white-house/fake-white-house-garden.jpg",
+        "https://static.effing.dev/fake-white-house/fake-white-house-drone-shot.jpg",
       ],
     },
   ],
   realtor: {
-    photoUrl: "https://i.pravatar.cc/600?img=32",
-    name: "Sofia Martínez",
-    company: "Costa del Sol Properties",
-    phone: "+34 952 123 456",
-    email: "sofia@costadelsol.es",
+    photoUrl: "https://i.pravatar.cc/600?img=44",
+    name: "Margaret Beaumont",
+    company: "Capitop Realty Group",
+    phone: "+32 9 296 11 11",
+    email: "margaret@capitop.estate",
   },
 };
 
@@ -194,6 +197,10 @@ export async function runner({
         photoDuration,
         bounds: photoBounds,
       });
+      const gradientLayer = await buildGradientLayer({
+        photoDuration,
+        bounds: { width, height },
+      });
 
       const pillLayers = await Promise.all(
         slide.pills.map((_, pillIndex) =>
@@ -214,7 +221,7 @@ export async function runner({
         ...(i === 0
           ? {}
           : { transition: WIPE_LEFT_TRANSITION }),
-        layers: [photoLayer, ...pillLayers],
+        layers: [photoLayer, gradientLayer, ...pillLayers],
       });
     }),
   );
@@ -253,7 +260,7 @@ export async function runner({
   ]);
 
   const realtorSegment = effieSegment({
-    duration: REALTOR_DURATION,
+    duration: REALTOR_DURATION + 2,
     transition: {
       type: "fade",
       through: "black",
@@ -293,7 +300,7 @@ async function buildPhotoLayer({
       {
         imageUrl: slide.imageUrl,
         distance: 0.08,
-        oversize: 1.18,
+        oversize: 1.0,
         progress: 0.5,
       } satisfies PannedPhotoProps,
       bounds,
@@ -307,6 +314,28 @@ async function buildPhotoLayer({
       },
       fadeIn(0, TRANSITION_DURATION),
       saturateIn(0, TRANSITION_DURATION),
+      fadeOut(photoDuration - TRANSITION_DURATION, TRANSITION_DURATION),
+    ],
+  };
+}
+
+async function buildGradientLayer({
+  photoDuration,
+  bounds,
+}: {
+  photoDuration: number;
+  bounds: Bounds;
+}): Promise<ImageLayer> {
+  return {
+    type: "image",
+    source: await fnUrl(
+      "image",
+      "photo-gradient",
+      {} satisfies PhotoGradientProps,
+      bounds,
+    ),
+    effects: [
+      fadeIn(0, TRANSITION_DURATION),
       fadeOut(photoDuration - TRANSITION_DURATION, TRANSITION_DURATION),
     ],
   };

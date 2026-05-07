@@ -15,11 +15,12 @@ export const propsSchema = z.object({
 export type PanningPhotoProps = z.infer<typeof propsSchema>;
 
 export const previewProps: PanningPhotoProps = {
-  imageUrl: "https://static.effing.dev/picsum/1080/1920/water.jpg",
+  imageUrl:
+    "https://static.effing.dev/fake-white-house/fake-white-house-garden.jpg",
   frameCount: 90,
   direction: "left",
   distance: 0.15,
-  oversize: 1.2,
+  oversize: 1.0,
 };
 
 export async function* runner({

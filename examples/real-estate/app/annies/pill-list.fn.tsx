@@ -25,8 +25,8 @@ type Pill = z.infer<typeof pillSchema>;
 
 export const previewProps: PillListProps = {
   pills: [
-    { text: "New Listing", variant: "dark" },
-    { text: "Los Angeles, CA 90045", variant: "light" },
+    { text: "JUST LISTED", variant: "dark" },
+    { text: "Washington, DC", variant: "light" },
   ],
   fontSize: 36,
   totalFrameCount: 90,

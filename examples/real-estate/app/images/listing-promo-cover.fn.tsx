@@ -18,10 +18,11 @@ export const propsSchema = z.object({
 export type ListingPromoCoverProps = z.infer<typeof propsSchema>;
 
 export const previewProps: ListingPromoCoverProps = {
-  imageUrl: "https://static.effing.dev/unsplash/white-villa/portrait.jpg",
+  imageUrl:
+    "https://static.effing.dev/fake-white-house/fake-white-house-facade.jpg",
   pills: [
     { text: "JUST LISTED", variant: "dark" },
-    { text: "Marbella, Spain 29602", variant: "light" },
+    { text: "Washington, DC", variant: "light" },
   ],
   fontSize: 64,
 };
@@ -45,6 +46,18 @@ export async function runner({
         backgroundPosition: "center",
       }}
     >
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          bottom: 0,
+          width,
+          height,
+          display: "flex",
+          backgroundImage:
+            "linear-gradient(to top, rgba(244, 239, 230, 0.33) 0%, rgba(244, 239, 230, 0) 70%)",
+        }}
+      />
       <PillListOverlay
         pills={pills}
         fontSize={fontSize}

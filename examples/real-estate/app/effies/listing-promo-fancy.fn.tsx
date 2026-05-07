@@ -7,6 +7,7 @@ import type { PillListProps } from "~/annies/pill-list.fn";
 import type { RealtorCardProps } from "~/annies/realtor-card.fn";
 import type { ListingPromoCoverProps } from "~/images/listing-promo-cover.fn";
 import type { PannedPhotoProps } from "~/images/panned-photo.fn";
+import type { PhotoGradientProps } from "~/images/photo-gradient.fn";
 
 const pillSchema = z.object({
   text: z.string(),
@@ -38,39 +39,41 @@ export const previewProps: ListingPromoProps = {
     {
       pills: [
         { text: "JUST LISTED", variant: "dark" },
-        { text: "Marbella, Spain 29602", variant: "light" },
-      ],
-      imageUrls: ["https://static.effing.dev/unsplash/white-villa/portrait.jpg"],
-    },
-    {
-      pills: [
-        { text: "5 Bedrooms", variant: "light" },
-        { text: "4 Bathrooms", variant: "light" },
-        { text: "3,800 sqft", variant: "dark" },
+        { text: "Washington, DC", variant: "light" },
       ],
       imageUrls: [
-        "https://static.effing.dev/unsplash/white-villa/bedroom.jpg",
-        "https://static.effing.dev/unsplash/white-villa/bathroom.jpg",
+        "https://static.effing.dev/fake-white-house/fake-white-house-facade.jpg",
       ],
     },
     {
       pills: [
-        { text: "Built in 2019", variant: "light" },
-        { text: "Heated Pool", variant: "light" },
-        { text: "€2,450,000", variant: "dark" },
+        { text: "132 Rooms", variant: "light" },
+        { text: "35 Bathrooms", variant: "light" },
+        { text: "55,000 sqft", variant: "dark" },
       ],
       imageUrls: [
-        "https://static.effing.dev/unsplash/white-villa/wide.jpg",
-        "https://static.effing.dev/unsplash/white-villa/elevated.jpg",
+        "https://static.effing.dev/fake-white-house/fake-white-house-oval-office.jpg",
+        "https://static.effing.dev/fake-white-house/fake-white-house-press-room.jpg",
+      ],
+    },
+    {
+      pills: [
+        { text: "Built in 1800", variant: "light" },
+        { text: "Bunker Included", variant: "light" },
+        { text: "$398,000,000", variant: "dark" },
+      ],
+      imageUrls: [
+        "https://static.effing.dev/fake-white-house/fake-white-house-garden.jpg",
+        "https://static.effing.dev/fake-white-house/fake-white-house-drone-shot.jpg",
       ],
     },
   ],
   realtor: {
-    photoUrl: "https://i.pravatar.cc/600?img=32",
-    name: "Sofia Martínez",
-    company: "Costa del Sol Properties",
-    phone: "+34 952 123 456",
-    email: "sofia@costadelsol.es",
+    photoUrl: "https://i.pravatar.cc/600?img=44",
+    name: "Margaret Beaumont",
+    company: "Capitop Realty Group",
+    phone: "+32 9 296 11 11",
+    email: "margaret@capitop.estate",
   },
 };
 
@@ -79,7 +82,7 @@ const TRANSITION_DURATION = 0.6;
 const PHOTO_DURATION = 3.5;
 const REALTOR_DURATION = 3.5;
 const PAN_DISTANCE = 0.15;
-const PAN_OVERSIZE = 1.2;
+const PAN_OVERSIZE = 1.0;
 
 export async function runner({
   props: { scenes, realtor },
@@ -244,10 +247,22 @@ export async function runner({
     segments: [
       effieSegment({
         duration: photoSegmentDuration,
-        layers: [...photoLayers, ...pillLayers],
+        layers: [
+          ...photoLayers,
+          {
+            type: "image",
+            source: await fnUrl(
+              "image",
+              "photo-gradient",
+              {} satisfies PhotoGradientProps,
+              { width, height },
+            ),
+          },
+          ...pillLayers,
+        ],
       }),
       effieSegment({
-        duration: REALTOR_DURATION,
+        duration: REALTOR_DURATION + 2,
         transition: { type: "fade", duration: TRANSITION_DURATION },
         layers: [
           {
