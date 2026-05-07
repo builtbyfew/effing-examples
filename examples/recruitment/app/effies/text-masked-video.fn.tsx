@@ -13,12 +13,16 @@ const FPS = 30;
 // final all-cut stage longer.
 const STAGE_INTERVAL_SECONDS = 0.6;
 
+const REVEAL_SFX_DEFAULT =
+  "https://static.effing.dev/examples/recruitment/keyboard-click.mp3";
+
 export const propsSchema = z.object({
   jobTitle: z.string(),
   videoUrl: z.string().url(),
   duration: z.number().positive().optional(),
   orangeColor: z.string().optional(),
   cta: z.string().optional(),
+  revealSfxUrl: z.string().url().nullable().optional(),
 });
 
 type TextMaskedVideoProps = z.infer<typeof propsSchema>;
@@ -30,6 +34,7 @@ export const previewProps: TextMaskedVideoProps = {
   orangeColor: "#ff3700",
   // orangeColor: "#ff00c8",
   cta: "APPLY NOW >>>",
+  revealSfxUrl: REVEAL_SFX_DEFAULT,
 };
 
 export async function runner({
@@ -39,6 +44,7 @@ export async function runner({
     duration = 6,
     orangeColor = "#e04300",
     cta = "APPLY NOW >>>",
+    revealSfxUrl = REVEAL_SFX_DEFAULT,
   },
   bounds: { width, height },
 }: RunnerArgs<TextMaskedVideoProps>): EffieRunnerReturn {
@@ -63,7 +69,10 @@ export async function runner({
   // total duration. Stage 0 (orange-only) holds for one interval, then each
   // line cutout reveals one interval after the previous. The final stage
   // holds from its reveal time until `duration`.
-  const revealAt = (i: number) => i * STAGE_INTERVAL_SECONDS;
+  const stageDuration = (i: number) =>
+    i < stageCount - 1
+      ? STAGE_INTERVAL_SECONDS
+      : Math.max(0.001, duration - (stageCount - 1) * STAGE_INTERVAL_SECONDS);
 
   const stagePromises = Array.from({ length: stageCount }, (_, i) =>
     fnUrl(
@@ -96,18 +105,20 @@ export async function runner({
     ...stagePromises,
   ]);
 
-  // Stage i is the only visible layer between revealAt(i) and revealAt(i+1).
-  // Hard cut at each boundary — the next line's cutout pops in instantly
-  // rather than fading. (Cross-fading consecutive stages dims the orange
-  // surface during the transition because two semi-transparent orange
-  // layers don't compose to full opacity, so a hard cut is the cleanest
-  // way to keep the surface solid.)
-  const layers = stageUrls.map((source, i) =>
-    effieLayer({
-      type: "image",
-      source,
-      from: revealAt(i),
-      until: i < stageCount - 1 ? revealAt(i + 1) : duration,
+  // Each stage gets its own segment so we can attach a reveal sfx as the
+  // segment's audio. The video stays at the top level (not overridden per
+  // segment), which makes FFS play it continuously across the segment cuts
+  // — it computes `trim=start=cumulativeTime:duration=segment.duration` per
+  // segment slice. The first segment (orange-only opener) gets no sfx since
+  // nothing is being revealed yet.
+  const sfx = revealSfxUrl
+    ? { source: effieWebUrl(revealSfxUrl) }
+    : undefined;
+  const segments = stageUrls.map((source, i) =>
+    effieSegment({
+      duration: stageDuration(i),
+      layers: [effieLayer({ type: "image", source })],
+      ...(i > 0 && sfx ? { audio: sfx } : {}),
     }),
   );
 
@@ -117,6 +128,6 @@ export async function runner({
     fps: FPS,
     cover,
     background: { type: "video", source: effieWebUrl(videoUrl) },
-    segments: [effieSegment({ duration, layers })],
+    segments,
   });
 }
