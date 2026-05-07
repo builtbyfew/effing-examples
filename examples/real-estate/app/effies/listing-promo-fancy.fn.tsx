@@ -91,7 +91,7 @@ const FPS = 30;
 const TRANSITION_DURATION = 0.6;
 const PHOTO_DURATION = 4.5;
 const REALTOR_DURATION = 5;
-const PAN_DISTANCE = 0.15;
+const PAN_DISTANCE = 0.5;
 const PAN_OVERSIZE = 1.0;
 
 export async function runner({
