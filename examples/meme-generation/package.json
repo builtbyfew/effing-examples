@@ -10,7 +10,8 @@
     "start": "cross-env NODE_ENV=production node ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
     "cloud:deploy": "effing-cloud deploy",
-    "cloud:url-secret": "effing-cloud url-secret"
+    "cloud:url-secret": "effing-cloud url-secret",
+    "cloud:url": "node scripts/cloud-url.mjs"
   },
   "dependencies": {
     "@effing/annie": "^0.32.0",
