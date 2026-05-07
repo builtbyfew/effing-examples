@@ -117,6 +117,10 @@ function saturateIn(start: number, duration: number): EffieEffect {
   return { type: "saturate-in", start, duration };
 }
 
+function saturateOut(start: number, duration: number): EffieEffect {
+  return { type: "saturate-out", start, duration };
+}
+
 function slideMotion({
   direction,
   distance,
@@ -201,10 +205,15 @@ export async function runner({
         photoDuration,
         bounds: photoBounds,
       });
-      const gradientLayer = await buildGradientLayer({
-        photoDuration,
-        bounds: { width, height },
-      });
+      const gradientLayer: ImageLayer = {
+        type: "image",
+        source: await fnUrl(
+          "image",
+          "photo-gradient",
+          {} satisfies PhotoGradientProps,
+          { width, height },
+        ),
+      };
 
       const slideInBase = hasIncomingTransition
         ? PILL_SLIDE_IN_DELAY_AFTER_TRANSITION
@@ -318,31 +327,7 @@ async function buildPhotoLayer({
         distance: PHOTO_SCROLL_DISTANCE,
         duration: photoDuration,
       },
-      fadeIn(0, TRANSITION_DURATION),
-      saturateIn(0, TRANSITION_DURATION),
-      fadeOut(photoDuration - TRANSITION_DURATION, TRANSITION_DURATION),
-    ],
-  };
-}
-
-async function buildGradientLayer({
-  photoDuration,
-  bounds,
-}: {
-  photoDuration: number;
-  bounds: Bounds;
-}): Promise<ImageLayer> {
-  return {
-    type: "image",
-    source: await fnUrl(
-      "image",
-      "photo-gradient",
-      {} satisfies PhotoGradientProps,
-      bounds,
-    ),
-    effects: [
-      fadeIn(0, TRANSITION_DURATION),
-      fadeOut(photoDuration - TRANSITION_DURATION, TRANSITION_DURATION),
+      saturateOut(photoDuration - TRANSITION_DURATION, TRANSITION_DURATION),
     ],
   };
 }
