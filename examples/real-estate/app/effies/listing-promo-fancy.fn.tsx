@@ -88,8 +88,8 @@ export const previewProps: ListingPromoProps = {
 };
 
 const FPS = 30;
-const TRANSITION_DURATION = 0.6;
-const PHOTO_DURATION = 4.5;
+const TRANSITION_DURATION = 1.5;
+const PHOTO_DURATION = 5;
 const REALTOR_DURATION = 5;
 const PAN_DISTANCE = 0.5;
 const PAN_OVERSIZE = 1.0;
@@ -113,6 +113,7 @@ export async function runner({
   const sceneSegments = await Promise.all(
     scenes.map(async (scene, sceneIdx) => {
       const isFirstScene = sceneIdx === 0;
+      const isLastScene = sceneIdx === scenes.length - 1;
       const sceneDuration = scene.imageUrls.length * PHOTO_DURATION;
 
       const photoLayers = (
@@ -120,6 +121,8 @@ export async function runner({
           scene.imageUrls.map(async (imageUrl, photoIdx) => {
             const isFirstPhoto = photoIdx === 0;
             const isLastPhoto = photoIdx === scene.imageUrls.length - 1;
+            const isVeryFirstPhoto = isFirstScene && isFirstPhoto;
+            const isVeryLastPhoto = isLastScene && isLastPhoto;
             const entry = photoIdx * PHOTO_DURATION;
 
             const restLayer = {
@@ -132,6 +135,21 @@ export async function runner({
                   frameCount: photoFrameCount,
                   distance: PAN_DISTANCE,
                   oversize: PAN_OVERSIZE,
+                  easing: "easeOutIn",
+                  // Only last-of-scene photos need an end-hold — the segment
+                  // transition straddles the boundary and hides it. Non-last
+                  // photos hand off to the static slideOutLayer at progress=1
+                  // immediately, so an end-hold here would just stall the pan.
+                  // The very first photo has no incoming transition; the very
+                  // last has a fade to the realtor — neither benefits from a
+                  // hold on its outer edge.
+                  holdFractionStart: isVeryFirstPhoto
+                    ? 0
+                    : TRANSITION_DURATION / PHOTO_DURATION,
+                  holdFractionEnd:
+                    isLastPhoto && !isVeryLastPhoto
+                      ? TRANSITION_DURATION / PHOTO_DURATION
+                      : 0,
                 } satisfies PanningPhotoProps,
                 { width, height },
               ),
@@ -184,8 +202,11 @@ export async function runner({
       // Pills slide in at segment start for the first scene, or after the
       // inter-scene slide transition has settled for subsequent scenes — so
       // pills don't move while the segment itself is sliding into view.
+      // They also fade out so they're gone before the outgoing segment
+      // transition starts overlapping with the next segment.
       const pillDelay = isFirstScene ? 0 : TRANSITION_DURATION;
       const pillVisibleDuration = sceneDuration - pillDelay;
+      const pillFadeOutEnd = sceneDuration - TRANSITION_DURATION;
       const pillLayer = {
         type: "animation" as const,
         source: await fnUrl(
@@ -202,6 +223,13 @@ export async function runner({
         ),
         delay: pillDelay,
         from: pillDelay,
+        effects: [
+          {
+            type: "fade-out" as const,
+            start: pillFadeOutEnd - TRANSITION_DURATION - pillDelay,
+            duration: TRANSITION_DURATION,
+          },
+        ],
       };
 
       return effieSegment({
@@ -278,6 +306,7 @@ export async function runner({
                 email: realtor.email,
                 totalFrameCount: realtorFrameCount,
                 fadeInFrameCount: realtorFadeInFrameCount,
+                fps: FPS,
               } satisfies RealtorCardProps,
               { width, height },
             ),

@@ -38,6 +38,11 @@ export const propsSchema = z.object({
   email: z.string(),
   totalFrameCount: z.number().int().min(1),
   fadeInFrameCount: z.number().int().min(1).optional(),
+  // Used to scale the internal beat sheet (originally authored at 30 fps) to
+  // whatever frame rate the effie is rendering at. Without this, hardcoded
+  // start/duration frames keep their integer values and the whole reveal
+  // sequence collapses into the first ~0.45s at 240 fps.
+  fps: z.number().int().min(1).optional(),
 });
 
 export type RealtorCardProps = z.infer<typeof propsSchema>;
@@ -61,6 +66,7 @@ export async function* runner({
     email,
     totalFrameCount,
     fadeInFrameCount = 18,
+    fps = 30,
   },
   bounds: { width, height },
 }: RunnerArgs<RealtorCardProps>): AnnieRunnerReturn {
@@ -89,6 +95,7 @@ export async function* runner({
         frame={frame}
         totalFrameCount={totalFrameCount}
         fadeInFrameCount={fadeInFrameCount}
+        fps={fps}
       />,
       { fonts },
     );
@@ -111,6 +118,7 @@ function Card({
   frame,
   totalFrameCount,
   fadeInFrameCount,
+  fps,
 }: {
   layout: Layout;
   photoUrl: string;
@@ -122,36 +130,43 @@ function Card({
   frame: number;
   totalFrameCount: number;
   fadeInFrameCount: number;
+  fps: number;
 }) {
   const { width, height } = layout;
+
+  // Hardcoded frame numbers in this component were authored against 30 fps.
+  // s() stretches them to the current rate; rates passed to Math.sin are
+  // divided by the same factor to keep the temporal frequency stable.
+  const fpsScale = fps / 30;
+  const s = (f: number) => f * fpsScale;
 
   const containerFade = easeOutCubic(progress(frame, 0, fadeInFrameCount));
   const liftY = (1 - containerFade) * Math.round(height * 0.02);
 
   const decorationReveals = Array.from({ length: DECORATION_COUNT }, (_, i) => {
     const t = DECORATION_TIMING[i];
-    return easeOutQuart(progress(frame, t.startFrame, t.durationFrames));
+    return easeOutQuart(progress(frame, s(t.startFrame), s(t.durationFrames)));
   });
 
-  const pulse = 1 + 0.04 * Math.sin(frame * 0.06);
+  const pulse = 1 + 0.04 * Math.sin(frame * (0.06 / fpsScale));
 
-  const photoFade = easeOutQuad(progress(frame, 30, 22));
+  const photoFade = easeOutQuad(progress(frame, s(30), s(22)));
   const kenBurns =
     1 + 0.015 * (frame / Math.max(1, totalFrameCount)) * photoFade;
-  const breath = 1 + 0.003 * Math.sin(frame * 0.04) * photoFade;
-  const ringSweep = easeOutQuart(progress(frame, 32, 28));
+  const breath = 1 + 0.003 * Math.sin(frame * (0.04 / fpsScale)) * photoFade;
+  const ringSweep = easeOutQuart(progress(frame, s(32), s(28)));
   const cardinalReveals = [
-    progress(frame, 58, 12),
-    progress(frame, 63, 12),
-    progress(frame, 68, 12),
-    progress(frame, 73, 12),
+    progress(frame, s(58), s(12)),
+    progress(frame, s(63), s(12)),
+    progress(frame, s(68), s(12)),
+    progress(frame, s(73), s(12)),
   ];
-  const bloomReveal = easeOutQuad(progress(frame, 24, 26));
+  const bloomReveal = easeOutQuad(progress(frame, s(24), s(26)));
 
   const wordmarkReveals = headChars.map((_, i) =>
-    easeOutQuart(progress(frame, 76 + i * 2, 14)),
+    easeOutQuart(progress(frame, s(76 + i * 2), s(14))),
   );
-  const subWordmarkReveal = easeOutQuart(progress(frame, 88, 14));
+  const subWordmarkReveal = easeOutQuart(progress(frame, s(88), s(14)));
 
   return (
     <div
@@ -168,7 +183,7 @@ function Card({
       <Decorations
         layout={layout}
         reveals={decorationReveals}
-        drift={frame}
+        drift={frame / fpsScale}
       />
       <PhotoBloom layout={layout} opacity={bloomReveal} />
       <Photo
@@ -183,12 +198,12 @@ function Card({
       <NameLine
         layout={layout}
         words={nameWords}
-        reveal={progress(frame, 48, 24)}
+        reveal={progress(frame, s(48), s(24))}
         liftY={liftY}
       />
       <FlourishWrap
         layout={layout}
-        reveal={easeOutQuart(progress(frame, 64, 22))}
+        reveal={easeOutQuart(progress(frame, s(64), s(22)))}
         liftY={liftY}
         pulse={pulse}
       />
@@ -210,8 +225,9 @@ function Card({
         email={email}
         frame={frame}
         liftY={liftY}
+        s={s}
       />
-      <EstMark layout={layout} reveal={easeOutQuart(progress(frame, 78, 18))} />
+      <EstMark layout={layout} reveal={easeOutQuart(progress(frame, s(78), s(18)))} />
     </div>
   );
 }
@@ -353,16 +369,18 @@ function Contact({
   email,
   frame,
   liftY,
+  s,
 }: {
   layout: Layout;
   phone: string;
   email: string;
   frame: number;
   liftY: number;
+  s: (f: number) => number;
 }) {
   const { width, min, text } = layout;
-  const phoneReveal = easeOutQuart(progress(frame, 88, 14));
-  const emailReveal = easeOutQuart(progress(frame, 94, 14));
+  const phoneReveal = easeOutQuart(progress(frame, s(88), s(14)));
+  const emailReveal = easeOutQuart(progress(frame, s(94), s(14)));
   return (
     <div
       style={{

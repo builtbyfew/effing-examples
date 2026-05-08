@@ -340,7 +340,7 @@ const DECORATIONS: DecorationSpec[] = [
   },
 ];
 
-const DRIFT_RATE = 0.025;
+const DRIFT_RATE = 0.05;
 const DRIFT_Y_PHASE_FACTOR = 0.7;
 
 type PreparedDecoration = {
