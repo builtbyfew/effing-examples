@@ -8,6 +8,94 @@ importers:
 
   .: {}
 
+  examples/carousel-slides:
+    dependencies:
+      '@effing/annie':
+        specifier: ^0.32.0
+        version: 0.32.0(zod@3.25.76)
+      '@effing/annie-player':
+        specifier: ^0.32.0
+        version: 0.32.0(react@19.2.5)
+      '@effing/canvas':
+        specifier: ^0.32.0
+        version: 0.32.0(@napi-rs/canvas@0.1.100)(csstype@3.2.3)(react@19.2.5)
+      '@effing/effie':
+        specifier: ^0.32.0
+        version: 0.32.0(zod@3.25.76)
+      '@effing/effie-preview':
+        specifier: ^0.32.0
+        version: 0.32.0(react@19.2.5)(zod@3.25.76)
+      '@effing/ffs':
+        specifier: ^0.32.0
+        version: 0.32.0
+      '@effing/fn':
+        specifier: ^0.32.0
+        version: 0.32.0(zod@3.25.76)
+      '@effing/serde':
+        specifier: ^0.32.0
+        version: 0.32.0
+      '@effing/tween':
+        specifier: ^0.32.0
+        version: 0.32.0
+      '@react-router/node':
+        specifier: ^7.0.0
+        version: 7.14.2(react-router@7.14.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(typescript@5.9.3)
+      '@react-router/serve':
+        specifier: ^7.0.0
+        version: 7.14.2(react-router@7.14.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(typescript@5.9.3)
+      cross-env:
+        specifier: ^7.0.3
+        version: 7.0.3
+      isbot:
+        specifier: ^5.1.0
+        version: 5.1.39
+      react:
+        specifier: ^19.0.0
+        version: 19.2.5
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.5(react@19.2.5)
+      react-router:
+        specifier: ^7.0.0
+        version: 7.14.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      tiny-invariant:
+        specifier: ^1.3.1
+        version: 1.3.3
+      zod:
+        specifier: ^3.25.76
+        version: 3.25.76
+    devDependencies:
+      '@react-router/dev':
+        specifier: ^7.0.0
+        version: 7.14.2(@react-router/serve@7.14.2(react-router@7.14.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(typescript@5.9.3))(@types/node@25.6.0)(react-router@7.14.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(typescript@5.9.3)(vite@7.3.2(@types/node@25.6.0))
+      '@react-router/fs-routes':
+        specifier: ^7.0.0
+        version: 7.14.2(@react-router/dev@7.14.2(@react-router/serve@7.14.2(react-router@7.14.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(typescript@5.9.3))(@types/node@25.6.0)(react-router@7.14.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(typescript@5.9.3)(vite@7.3.2(@types/node@25.6.0)))(typescript@5.9.3)
+      '@types/node':
+        specifier: ^25.0.3
+        version: 25.6.0
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.14)
+      effing-cloud:
+        specifier: ^0.4.0
+        version: 0.4.0
+      npm-run-all:
+        specifier: ^4.1.5
+        version: 4.1.5
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vite:
+        specifier: ^7.0.0
+        version: 7.3.2(@types/node@25.6.0)
+      vite-tsconfig-paths:
+        specifier: ^4.3.2
+        version: 4.3.2(typescript@5.9.3)(vite@7.3.2(@types/node@25.6.0))
+
   examples/meme-generation:
     dependencies:
       '@effing/annie':
