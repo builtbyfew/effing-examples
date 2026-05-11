@@ -1,0 +1,55 @@
+{
+  "name": "accent-job-ad",
+  "type": "module",
+  "sideEffects": false,
+  "scripts": {
+    "build": "react-router build",
+    "dev": "run-p dev:*",
+    "dev:app": "react-router dev",
+    "dev:ffs": "ffs",
+    "start": "cross-env NODE_ENV=production node ./build/server/index.js",
+    "typecheck": "react-router typegen && tsc",
+    "cloud:deploy": "effing-cloud deploy",
+    "cloud:url-secret": "effing-cloud url-secret"
+  },
+  "dependencies": {
+    "@effing/annie": "^0.32.0",
+    "@effing/annie-player": "^0.32.0",
+    "@effing/canvas": "^0.32.0",
+    "@effing/effie": "^0.32.0",
+    "@effing/effie-preview": "^0.32.0",
+    "@effing/ffs": "^0.32.0",
+    "@effing/fn": "^0.32.0",
+    "@effing/serde": "^0.32.0",
+    "@effing/tween": "^0.32.0",
+    "@react-router/node": "^7.0.0",
+    "@react-router/serve": "^7.0.0",
+    "cross-env": "^7.0.3",
+    "isbot": "^5.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router": "^7.0.0",
+    "tiny-invariant": "^1.3.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@react-router/dev": "^7.0.0",
+    "@react-router/fs-routes": "^7.0.0",
+    "@types/node": "^25.0.3",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "effing-cloud": "^0.4.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.9.3",
+    "vite": "^7.0.0",
+    "vite-tsconfig-paths": "^4.3.2"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@effing/ffmpeg"
+    ]
+  }
+}
