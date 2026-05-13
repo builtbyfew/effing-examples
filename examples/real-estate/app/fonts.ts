@@ -4,10 +4,14 @@ export type { FontData };
 
 export type Font = () => Promise<FontData>;
 
+/**
+ * Load multiple fonts in parallel
+ */
 export async function loadFonts(fonts: Font[]): Promise<FontData[]> {
   return Promise.all(fonts.map((font) => font()));
 }
 
+// Font cache to avoid re-fetching
 const fontCache = new Map<string, Promise<ArrayBuffer>>();
 
 async function fetchFont(url: string): Promise<ArrayBuffer> {
@@ -23,8 +27,12 @@ async function fetchFont(url: string): Promise<ArrayBuffer> {
   return fontCache.get(url)!;
 }
 
+// Google Fonts URLs - fetched from Google Fonts CSS2 API
 const GOOGLE_FONTS_BASE = "https://fonts.gstatic.com/s";
 
+/**
+ * Inter Semi-Bold (600)
+ */
 export const interSemiBold: Font = async () => ({
   name: "Inter",
   data: await fetchFont(
@@ -34,6 +42,9 @@ export const interSemiBold: Font = async () => ({
   style: "normal",
 });
 
+/**
+ * Inter Bold (700)
+ */
 export const interBold: Font = async () => ({
   name: "Inter",
   data: await fetchFont(
@@ -43,6 +54,57 @@ export const interBold: Font = async () => ({
   style: "normal",
 });
 
+/**
+ * Roboto Regular (400)
+ */
+export const robotoRegular: Font = async () => ({
+  name: "Roboto",
+  data: await fetchFont(
+    `${GOOGLE_FONTS_BASE}/roboto/v50/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWubEbWmT.ttf`,
+  ),
+  weight: 400,
+  style: "normal",
+});
+
+/**
+ * Roboto Bold (700)
+ */
+export const robotoBold: Font = async () => ({
+  name: "Roboto",
+  data: await fetchFont(
+    `${GOOGLE_FONTS_BASE}/roboto/v50/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWuYjammT.ttf`,
+  ),
+  weight: 700,
+  style: "normal",
+});
+
+/**
+ * Open Sans Regular (400)
+ */
+export const openSansRegular: Font = async () => ({
+  name: "Open Sans",
+  data: await fetchFont(
+    `${GOOGLE_FONTS_BASE}/opensans/v44/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsjZ0C4n.ttf`,
+  ),
+  weight: 400,
+  style: "normal",
+});
+
+/**
+ * Open Sans Semi-Bold (600)
+ */
+export const openSansSemiBold: Font = async () => ({
+  name: "Open Sans",
+  data: await fetchFont(
+    `${GOOGLE_FONTS_BASE}/opensans/v44/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsgH1y4n.ttf`,
+  ),
+  weight: 600,
+  style: "normal",
+});
+
+/**
+ * Fraunces Bold (700)
+ */
 export const frauncesBold: Font = async () => ({
   name: "Fraunces",
   data: await fetchFont(
@@ -52,6 +114,9 @@ export const frauncesBold: Font = async () => ({
   style: "normal",
 });
 
+/**
+ * Manrope Medium (500)
+ */
 export const manropeMedium: Font = async () => ({
   name: "Manrope",
   data: await fetchFont(
@@ -61,6 +126,9 @@ export const manropeMedium: Font = async () => ({
   style: "normal",
 });
 
+/**
+ * Manrope Semi-Bold (600)
+ */
 export const manropeSemiBold: Font = async () => ({
   name: "Manrope",
   data: await fetchFont(
@@ -70,6 +138,9 @@ export const manropeSemiBold: Font = async () => ({
   style: "normal",
 });
 
+/**
+ * Manrope Bold (700)
+ */
 export const manropeBold: Font = async () => ({
   name: "Manrope",
   data: await fetchFont(

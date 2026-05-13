@@ -1,8 +1,8 @@
 {
-  "include": ["**/*", ".react-router/types/**/*"],
+  "include": ["app/**/*", "effing.config.ts"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "types": ["node", "vite/client"],
+    "types": ["node"],
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
@@ -14,7 +14,6 @@
     "esModuleInterop": true,
     "verbatimModuleSyntax": true,
     "resolveJsonModule": true,
-    "rootDirs": [".", "./.react-router/types"],
     "paths": {
       "~/*": ["./app/*"]
     }
