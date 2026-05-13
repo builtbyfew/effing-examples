@@ -4,7 +4,7 @@ import { createCanvas, renderReactElement } from "@effing/canvas";
 import { loadFonts, antonRegular } from "~/fonts";
 import { MemeCaption } from "~/meme-caption";
 
-const IMAGE_URL = "https://imgflip.com/s/meme/Distracted-Boyfriend.jpg";
+const IMAGE_URL = "https://static.effing.dev/meme/Distracted-Boyfriend.jpg";
 const IMAGE_ASPECT = 1200 / 800;
 
 export const propsSchema = z.object({

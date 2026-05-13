@@ -6,6 +6,7 @@ import type { MemeTopBottomProps } from "~/images/meme-top-bottom.fn";
 import type { MemeTopBottomAnnieProps } from "~/annies/meme-top-bottom.fn";
 import type { MemeDistractedBoyfriendAnnieProps } from "~/annies/meme-distracted-boyfriend.fn";
 import type { MemeDrakeHotlineBlingAnnieProps } from "~/annies/meme-drake-hotline-bling.fn";
+import type { MemeChangeMyMindAnnieProps } from "~/annies/meme-change-my-mind.fn";
 
 export const propsSchema = z.object({});
 type MemeMedleyProps = z.infer<typeof propsSchema>;
@@ -62,6 +63,16 @@ export async function runner({
     { width, height },
   );
 
+  const changeMyMindAnnie = await fnUrl(
+    "annie",
+    "meme-change-my-mind",
+    {
+      text: "JSX is a fine effing language",
+      frameCount,
+    } satisfies MemeChangeMyMindAnnieProps,
+    { width, height },
+  );
+
   // The cover is the poster frame — re-use the still version of the first
   // meme rendered with the same labels as the annie segment.
   const cover = await fnUrl(
@@ -113,6 +124,16 @@ export async function runner({
           {
             type: "animation",
             source: drakeAnnie,
+          },
+        ],
+      }),
+      effieSegment({
+        duration: SEGMENT_DURATION,
+        transition: { type: "fade", duration: TRANSITION_DURATION },
+        layers: [
+          {
+            type: "animation",
+            source: changeMyMindAnnie,
           },
         ],
       }),

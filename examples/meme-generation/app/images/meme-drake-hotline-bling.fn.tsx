@@ -3,7 +3,7 @@ import type { RunnerArgs, ImageRunnerReturn } from "@effing/fn";
 import { createCanvas, renderReactElement } from "@effing/canvas";
 import { loadFonts, robotoBold } from "~/fonts";
 
-const IMAGE_URL = "https://imgflip.com/s/meme/Drake-Hotline-Bling.jpg";
+const IMAGE_URL = "https://static.effing.dev/meme/Drake-Hotline-Bling.jpg";
 const IMAGE_ASPECT = 1; // 1200x1200, two 1200x600 panels stacked
 
 export const propsSchema = z.object({
