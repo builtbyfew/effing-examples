@@ -23,7 +23,7 @@ export type MemeTopBottomAnnieProps = z.infer<typeof propsSchema>;
 export const previewProps: MemeTopBottomAnnieProps = {
   imageUrl: "https://static.effing.dev/picsum/1080/1920/plants.jpg",
   topText: "They photosynthesize",
-  bottomText: "I doom-scroll",
+  bottomText: "I render videos in TypeScript",
   frameCount: 90,
 };
 
