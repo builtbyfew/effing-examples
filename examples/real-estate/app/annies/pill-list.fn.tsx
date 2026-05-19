@@ -15,7 +15,7 @@ export const propsSchema = z.object({
   fontSize: z.number().int().min(1),
   totalFrameCount: z.number().int().min(1),
   staggerFrameCount: z.number().int().min(1).optional(),
-  slideFrameCount: z.number().int().min(1).optional(),
+  entryFrameCount: z.number().int().min(1).optional(),
   horizontalAlignment: z.enum(["left", "center", "right"]).optional(),
   verticalAlignment: z.enum(["top", "center", "bottom"]).optional(),
 });
@@ -29,9 +29,9 @@ export const previewProps: PillListProps = {
     { text: "Washington, DC", variant: "light" },
   ],
   fontSize: 36,
-  totalFrameCount: 90,
+  totalFrameCount: 120,
   staggerFrameCount: 12,
-  slideFrameCount: 12,
+  entryFrameCount: 30,
 };
 
 export async function* runner({
@@ -40,7 +40,7 @@ export async function* runner({
     fontSize,
     totalFrameCount,
     staggerFrameCount = 12,
-    slideFrameCount = 12,
+    entryFrameCount = 30,
     horizontalAlignment = "left",
     verticalAlignment = "bottom",
   },
@@ -50,7 +50,7 @@ export async function* runner({
   const timings = computeTimings(
     pills.length,
     staggerFrameCount,
-    slideFrameCount,
+    entryFrameCount,
   );
   yield* tween(totalFrameCount, async (_interval, frame) => {
     const canvas = createCanvas(width, height);
@@ -71,18 +71,18 @@ export async function* runner({
   });
 }
 
-type PillTiming = { start: number; slide: number };
+type PillTiming = { start: number; duration: number };
 
 // Per-pill timing multipliers around 1.0, cycled if there are more pills than
 // entries. Breaks the metronomic feel of evenly-spaced staggers — pills arrive
-// in a syncopated rhythm with slightly varied settle paces.
+// in a syncopated rhythm with slightly varied entry paces.
 const STAGGER_WOBBLE = [0.8, 1.3, 0.9, 1.15, 0.95, 1.1];
-const SLIDE_WOBBLE = [1.0, 0.82, 1.18, 0.92, 1.08, 0.95];
+const DURATION_WOBBLE = [1.0, 0.92, 1.08, 0.95, 1.05, 0.98];
 
 function computeTimings(
   count: number,
   baseStagger: number,
-  baseSlide: number,
+  baseDuration: number,
 ): PillTiming[] {
   const timings: PillTiming[] = [];
   let start = 0;
@@ -92,17 +92,17 @@ function computeTimings(
     }
     timings.push({
       start,
-      slide: baseSlide * SLIDE_WOBBLE[i % SLIDE_WOBBLE.length],
+      duration: baseDuration * DURATION_WOBBLE[i % DURATION_WOBBLE.length],
     });
   }
   return timings;
 }
 
-function progressFor(frame: number, { start, slide }: PillTiming): number {
-  return Math.max(0, Math.min(1, (frame - start) / slide));
+function progressFor(frame: number, { start, duration }: PillTiming): number {
+  return Math.max(0, Math.min(1, (frame - start) / duration));
 }
 
-// Cover image reuses this with all progresses = 1 for a static frame.
+// Cover / static-frame consumers pass 1 per pill for a fully-settled frame.
 export function PillListOverlay({
   pills,
   fontSize,
@@ -124,6 +124,7 @@ export function PillListOverlay({
   const pillPaddingY = Math.round(fontSize * 0.42);
   const slideDistance = Math.round(width * 0.4);
   const liftDistance = Math.round(fontSize * 1.4);
+  const pillHeight = fontSize + pillPaddingY * 2;
 
   // TikTok-style safe zone: at portrait 9:16 (~1920 tall) the bottom UI
   // (caption, action rail, etc.) eats a big slice; shorter aspect ratios
@@ -156,10 +157,41 @@ export function PillListOverlay({
       }}
     >
       {pills.map((pill, i) => {
-        const back = easeOutBack(progresses[i]);
-        const opacity = easeOutQuad(progresses[i]);
+        const progress = progresses[i];
         const isDark = pill.variant === "dark";
-        const transform = `translate(${(1 - back) * -slideDistance}px, ${(1 - back) * liftDistance}px) rotate(${(1 - back) * -10}deg) scale(${0.4 + 0.6 * back})`;
+
+        // The entry is one continuous motion split into overlapping sub-curves:
+        // the pill is thrown in (translate + rotate, bouncy easeOutBack) over
+        // the first ~45%, and unfurls horizontally (width grows on easeOutQuad)
+        // from ~20% through ~85%. The overlap kills the dead beat where the
+        // small circle would otherwise sit still before starting to widen.
+        const slideSubProgress = Math.min(1, progress / 0.45);
+        const back = easeOutBack(slideSubProgress);
+        const opacity = easeOutQuad(Math.min(1, progress / 0.25));
+        const transform = `translate(${(1 - back) * -slideDistance}px, ${(1 - back) * liftDistance}px) rotate(${(1 - back) * -10}deg)`;
+
+        const growEased = easeOutQuad(
+          Math.max(0, Math.min(1, (progress - 0.2) / 0.65)),
+        );
+
+        // Text fades in only once the pill has grown wide enough to contain it.
+        // Earlier overflow is clipped by overflow:hidden, so the text never
+        // escapes a narrow pill.
+        const textOpacity = easeOutQuad(
+          Math.max(0, Math.min(1, (progress - 0.75) / 0.25)),
+        );
+
+        const sharedTextStyle = {
+          whiteSpace: "nowrap" as const,
+          fontFamily: fontFamily.body,
+          fontSize,
+          fontWeight: isDark ? 700 : 600,
+          letterSpacing: isDark ? fontSize * 0.04 : fontSize * 0.01,
+          paddingLeft: pillPaddingX,
+          paddingRight: pillPaddingX,
+          paddingTop: pillPaddingY,
+          paddingBottom: pillPaddingY,
+        };
 
         return (
           <div
@@ -169,24 +201,46 @@ export function PillListOverlay({
               transform,
               transformOrigin: "left center",
               opacity,
-              backgroundColor: isDark ? palette.charcoal : palette.cream,
-              color: isDark ? palette.cream : palette.charcoal,
-              fontFamily: fontFamily.body,
-              fontSize,
-              fontWeight: isDark ? 700 : 600,
-              letterSpacing: isDark ? fontSize * 0.04 : fontSize * 0.01,
-              paddingLeft: pillPaddingX,
-              paddingRight: pillPaddingX,
-              paddingTop: pillPaddingY,
-              paddingBottom: pillPaddingY,
-              borderRadius: fontSize * 2,
-              boxShadow: isDark
-                ? "0 10px 28px rgba(20, 18, 18, 0.28)"
-                : "0 8px 24px rgba(20, 18, 18, 0.14)",
-              whiteSpace: "nowrap",
             }}
           >
-            {pill.text}
+            <div style={{ position: "relative", display: "flex" }}>
+              {/* Placeholder sets the natural pill width via the text it
+                  contains; the visible pill below is sized as a % of it. */}
+              <div
+                style={{
+                  ...sharedTextStyle,
+                  display: "flex",
+                  opacity: 0,
+                  color: "transparent",
+                }}
+              >
+                {pill.text}
+              </div>
+              {/* Visible pill — width grows from a circle (minWidth) to the
+                  full natural width set by the placeholder. */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  bottom: 0,
+                  width: `${growEased * 100}%`,
+                  minWidth: pillHeight,
+                  display: "flex",
+                  overflow: "hidden",
+                  backgroundColor: isDark ? palette.charcoal : palette.cream,
+                  color: isDark ? palette.cream : palette.charcoal,
+                  borderRadius: fontSize * 2,
+                  boxShadow: isDark
+                    ? "0 10px 28px rgba(20, 18, 18, 0.28)"
+                    : "0 8px 24px rgba(20, 18, 18, 0.14)",
+                }}
+              >
+                <div style={{ ...sharedTextStyle, opacity: textOpacity }}>
+                  {pill.text}
+                </div>
+              </div>
+            </div>
           </div>
         );
       })}

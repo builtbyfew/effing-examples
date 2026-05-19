@@ -101,7 +101,7 @@ export async function runner({
   const pillFontSize = Math.round(width * 0.05);
   const photoFrameCount = Math.max(1, Math.round(PHOTO_DURATION * FPS));
   const pillStaggerFrameCount = Math.round(FPS * 0.35);
-  const pillSlideFrameCount = Math.round(FPS * 0.4);
+  const pillEntryFrameCount = Math.round(FPS * 1.0);
   const realtorFrameCount = Math.max(1, Math.round(REALTOR_DURATION * FPS));
   const realtorFadeInFrameCount = Math.round(FPS * 0.6);
 
@@ -217,7 +217,7 @@ export async function runner({
             fontSize: pillFontSize,
             totalFrameCount: Math.max(1, Math.round(pillVisibleDuration * FPS)),
             staggerFrameCount: pillStaggerFrameCount,
-            slideFrameCount: pillSlideFrameCount,
+            entryFrameCount: pillEntryFrameCount,
           } satisfies PillListProps,
           { width, height },
         ),
