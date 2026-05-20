@@ -8,9 +8,9 @@ const IMAGE_URL = "https://static.effing.dev/meme/Distracted-Boyfriend.jpg";
 const IMAGE_ASPECT = 1200 / 800;
 
 export const propsSchema = z.object({
-  otherWomanLabel: z.string(),
-  boyfriendLabel: z.string(),
-  girlfriendLabel: z.string(),
+  otherWomanLabel: z.string().optional(),
+  boyfriendLabel: z.string().optional(),
+  girlfriendLabel: z.string().optional(),
   fontSize: z.number().int().min(1).optional(),
 });
 
@@ -23,7 +23,12 @@ export const previewProps: MemeDistractedBoyfriendProps = {
 };
 
 export async function runner({
-  props: { otherWomanLabel, boyfriendLabel, girlfriendLabel, fontSize },
+  props: {
+    otherWomanLabel = "",
+    boyfriendLabel = "",
+    girlfriendLabel = "",
+    fontSize,
+  },
   bounds: { width, height },
 }: RunnerArgs<MemeDistractedBoyfriendProps>): ImageRunnerReturn {
   const fonts = await loadFonts([antonRegular]);
@@ -70,34 +75,36 @@ export async function runner({
           objectFit: "cover",
         }}
       />
-      <div
-        style={{
-          position: "absolute",
-          top: imageTop + labelTopGap,
-          left: 0,
-          right: 0,
-          display: "flex",
-          flexDirection: "row",
-          paddingLeft: edgePadding,
-          paddingRight: edgePadding,
-          gap: columnGap,
-        }}
-      >
-        <MemeCaption
-          text={otherWomanLabel.toUpperCase()}
-          fontSize={resolvedFontSize}
-          textAlign="left"
-        />
-        <MemeCaption
-          text={boyfriendLabel.toUpperCase()}
-          fontSize={resolvedFontSize}
-        />
-        <MemeCaption
-          text={girlfriendLabel.toUpperCase()}
-          fontSize={resolvedFontSize}
-          textAlign="right"
-        />
-      </div>
+      {otherWomanLabel || boyfriendLabel || girlfriendLabel ? (
+        <div
+          style={{
+            position: "absolute",
+            top: imageTop + labelTopGap,
+            left: 0,
+            right: 0,
+            display: "flex",
+            flexDirection: "row",
+            paddingLeft: edgePadding,
+            paddingRight: edgePadding,
+            gap: columnGap,
+          }}
+        >
+          <MemeCaption
+            text={otherWomanLabel.toUpperCase()}
+            fontSize={resolvedFontSize}
+            textAlign="left"
+          />
+          <MemeCaption
+            text={boyfriendLabel.toUpperCase()}
+            fontSize={resolvedFontSize}
+          />
+          <MemeCaption
+            text={girlfriendLabel.toUpperCase()}
+            fontSize={resolvedFontSize}
+            textAlign="right"
+          />
+        </div>
+      ) : null}
     </div>,
     { fonts },
   );

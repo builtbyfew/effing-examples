@@ -1,13 +1,9 @@
 import { z } from "zod";
 import type { RunnerArgs, ImageRunnerReturn } from "@effing/fn";
-import {
-  createCanvas,
-  findLargestUsableFontSize,
-  loadImage,
-  renderReactElement,
-} from "@effing/canvas";
+import { createCanvas, renderReactElement } from "@effing/canvas";
 import { loadFonts, antonRegular } from "~/fonts";
 import { MemeCaption } from "~/meme-caption";
+import { computeMemeTopBottomLayout } from "~/meme-top-bottom-layout";
 
 export const propsSchema = z.object({
   imageUrl: z.string().url(),
@@ -29,43 +25,22 @@ export async function runner({
   bounds: { width, height },
 }: RunnerArgs<MemeTopBottomProps>): ImageRunnerReturn {
   const fonts = await loadFonts([antonRegular]);
-  const antonFont = fonts[0];
-
-  // Fit-to-width with letterboxing preserves the whole image; fall back to
-  // cover-crop when fitting to width would overflow the canvas vertically.
-  // Captions hug the visible image edges either way.
-  const image = await loadImage(imageUrl);
-  const naturalAspect = image.width / image.height;
-  const fitWidthHeight = Math.round(width / naturalAspect);
-  const useFitWidth = fitWidthHeight <= height;
-  const imageRenderHeight = useFitWidth ? fitWidthHeight : height;
-  const imageTop = useFitWidth
-    ? Math.floor((height - imageRenderHeight) / 2)
-    : 0;
-  const imageBottomBand = height - (imageTop + imageRenderHeight);
-
-  // Auto-fit each caption to the largest size that still fits, then pick the
-  // smaller so both render at a matching size. The cap keeps short labels
-  // from blooming to billboard scale.
-  const padding = Math.round(Math.min(width, height) * 0.035);
-  const captionMaxWidth = width - 2 * padding;
-  const captionMaxHeight = Math.max(40, Math.round(imageRenderHeight * 0.22));
-  const fontSizeCap = Math.round(Math.min(width, height) / 10);
-  const fitText = (text: string) =>
-    findLargestUsableFontSize({
-      text: text.toUpperCase(),
-      font: antonFont,
-      maxWidth: captionMaxWidth,
-      maxHeight: captionMaxHeight,
-      lineHeight: 1.05,
-      maxFontSize: fontSizeCap,
-    });
-  const captions = [topText, bottomText].filter(Boolean);
-  const resolvedFontSize =
-    fontSize ??
-    (captions.length > 0
-      ? Math.min(...captions.map(fitText))
-      : fontSizeCap);
+  const {
+    imageTop,
+    imageRenderHeight,
+    padding,
+    fontSize: resolvedFontSize,
+    topOffsetY,
+    bottomOffsetY,
+  } = await computeMemeTopBottomLayout({
+    width,
+    height,
+    imageUrl,
+    topText,
+    bottomText,
+    font: fonts[0],
+    fontSize,
+  });
 
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
@@ -96,7 +71,7 @@ export async function runner({
         <div
           style={{
             position: "absolute",
-            top: imageTop + padding,
+            top: topOffsetY,
             left: 0,
             right: 0,
             display: "flex",
@@ -114,7 +89,7 @@ export async function runner({
         <div
           style={{
             position: "absolute",
-            bottom: imageBottomBand + padding,
+            bottom: bottomOffsetY,
             left: 0,
             right: 0,
             display: "flex",
@@ -134,4 +109,3 @@ export async function runner({
 
   return canvas.encode("jpeg");
 }
-

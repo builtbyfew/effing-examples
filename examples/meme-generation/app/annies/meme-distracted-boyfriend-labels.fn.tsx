@@ -5,7 +5,8 @@ import { tween, easeOutBack } from "@effing/tween";
 import { loadFonts, antonRegular, type FontData } from "~/fonts";
 import { MemeCaption } from "~/meme-caption";
 
-const IMAGE_URL = "https://imgflip.com/s/meme/Distracted-Boyfriend.jpg";
+// Source-image aspect, used only to position the labels relative to the
+// letterboxed image. The image itself is composed in by a separate layer.
 const IMAGE_ASPECT = 1200 / 800;
 
 export const propsSchema = z.object({
@@ -16,9 +17,9 @@ export const propsSchema = z.object({
   frameCount: z.number().int().min(1).optional(),
 });
 
-export type MemeDistractedBoyfriendAnnieProps = z.infer<typeof propsSchema>;
+export type MemeDistractedBoyfriendLabelsProps = z.infer<typeof propsSchema>;
 
-export const previewProps: MemeDistractedBoyfriendAnnieProps = {
+export const previewProps: MemeDistractedBoyfriendLabelsProps = {
   otherWomanLabel: "JSX on Effing Canvas",
   boyfriendLabel: "Me",
   girlfriendLabel: "Puppeteer",
@@ -34,7 +35,7 @@ export async function* runner({
     frameCount = 90,
   },
   bounds: { width, height },
-}: RunnerArgs<MemeDistractedBoyfriendAnnieProps>): AnnieRunnerReturn {
+}: RunnerArgs<MemeDistractedBoyfriendLabelsProps>): AnnieRunnerReturn {
   const fonts = await loadFonts([antonRegular]);
 
   const resolvedFontSize = fontSize ?? Math.round(width / 28);
@@ -160,27 +161,7 @@ async function renderMemeFrame({
   const ctx = canvas.getContext("2d");
   await renderReactElement(
     ctx,
-    <div
-      style={{
-        width,
-        height,
-        display: "flex",
-        backgroundColor: "#000000",
-      }}
-    >
-      <img
-        src={IMAGE_URL}
-        width={width}
-        height={imageRenderHeight}
-        style={{
-          position: "absolute",
-          top: imageTop,
-          left: 0,
-          width,
-          height: imageRenderHeight,
-          objectFit: "cover",
-        }}
-      />
+    <div style={{ width, height, display: "flex" }}>
       <div
         style={{
           position: "absolute",
@@ -218,7 +199,9 @@ async function renderMemeFrame({
     </div>,
     { fonts },
   );
-  return canvas.encode("jpeg");
+  // PNG keeps the canvas transparent so the labels composite over the
+  // separate image background layer.
+  return canvas.encode("png");
 }
 
 // Wraps a caption in a flex slot that fades and pops it in. `reveal` is the

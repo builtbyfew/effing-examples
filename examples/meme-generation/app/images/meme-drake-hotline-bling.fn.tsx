@@ -7,8 +7,8 @@ const IMAGE_URL = "https://static.effing.dev/meme/Drake-Hotline-Bling.jpg";
 const IMAGE_ASPECT = 1; // 1200x1200, two 1200x600 panels stacked
 
 export const propsSchema = z.object({
-  rejectLabel: z.string(),
-  approveLabel: z.string(),
+  rejectLabel: z.string().optional(),
+  approveLabel: z.string().optional(),
   fontSize: z.number().int().min(1).optional(),
 });
 
@@ -20,7 +20,7 @@ export const previewProps: MemeDrakeHotlineBlingProps = {
 };
 
 export async function runner({
-  props: { rejectLabel, approveLabel, fontSize },
+  props: { rejectLabel = "", approveLabel = "", fontSize },
   bounds: { width, height },
 }: RunnerArgs<MemeDrakeHotlineBlingProps>): ImageRunnerReturn {
   const fonts = await loadFonts([robotoBold]);
@@ -64,22 +64,26 @@ export async function runner({
           objectFit: "cover",
         }}
       />
-      <DrakeLabel
-        text={rejectLabel}
-        top={imageTop}
-        height={panelHeight}
-        canvasWidth={width}
-        sidePadding={sidePadding}
-        fontSize={resolvedFontSize}
-      />
-      <DrakeLabel
-        text={approveLabel}
-        top={imageTop + panelHeight}
-        height={panelHeight}
-        canvasWidth={width}
-        sidePadding={sidePadding}
-        fontSize={resolvedFontSize}
-      />
+      {rejectLabel ? (
+        <DrakeLabel
+          text={rejectLabel}
+          top={imageTop}
+          height={panelHeight}
+          canvasWidth={width}
+          sidePadding={sidePadding}
+          fontSize={resolvedFontSize}
+        />
+      ) : null}
+      {approveLabel ? (
+        <DrakeLabel
+          text={approveLabel}
+          top={imageTop + panelHeight}
+          height={panelHeight}
+          canvasWidth={width}
+          sidePadding={sidePadding}
+          fontSize={resolvedFontSize}
+        />
+      ) : null}
     </div>,
     { fonts },
   );

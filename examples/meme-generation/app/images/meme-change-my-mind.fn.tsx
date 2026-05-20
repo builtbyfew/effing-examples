@@ -10,7 +10,7 @@ import {
 } from "~/meme-poster";
 
 export const propsSchema = z.object({
-  text: z.string(),
+  text: z.string().optional(),
   fontSize: z.number().int().min(1).optional(),
 });
 
@@ -21,31 +21,37 @@ export const previewProps: MemeChangeMyMindProps = {
 };
 
 export async function runner({
-  props: { text, fontSize },
+  props: { text = "", fontSize },
   bounds: { width, height },
 }: RunnerArgs<MemeChangeMyMindProps>): ImageRunnerReturn {
   const imagePromise = loadImage(IMAGE_URL);
-  const fonts = await loadFonts([robotoBold]);
-
   const layout = computePosterLayout({ width, height });
   const { imageLeft, imageTop, imageRenderWidth, imageRenderHeight } = layout;
 
-  const textCanvas = await renderPosterTextCanvas({
-    text,
-    fontSize,
-    font: fonts[0],
-    fonts,
-    flatWidth: layout.flatWidth,
-    flatHeight: layout.flatHeight,
-  });
-  const image = await imagePromise;
+  const textCanvasPromise = text
+    ? (async () => {
+        const fonts = await loadFonts([robotoBold]);
+        return renderPosterTextCanvas({
+          text,
+          fontSize,
+          font: fonts[0],
+          fonts,
+          flatWidth: layout.flatWidth,
+          flatHeight: layout.flatHeight,
+        });
+      })()
+    : null;
+
+  const [image, textCanvas] = await Promise.all([imagePromise, textCanvasPromise]);
 
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
   ctx.fillStyle = "#000000";
   ctx.fillRect(0, 0, width, height);
   ctx.drawImage(image, imageLeft, imageTop, imageRenderWidth, imageRenderHeight);
-  paintPosterText(ctx, textCanvas, layout, layout.flatWidth, layout.flatHeight);
+  if (textCanvas) {
+    paintPosterText(ctx, textCanvas, layout, layout.flatWidth, layout.flatHeight);
+  }
 
   return canvas.encode("jpeg");
 }

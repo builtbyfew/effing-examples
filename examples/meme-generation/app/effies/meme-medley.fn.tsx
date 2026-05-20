@@ -3,10 +3,15 @@ import { effieData, effieSegment } from "@effing/effie";
 import { fnUrl } from "@effing/fn";
 import type { RunnerArgs, EffieRunnerReturn } from "@effing/fn";
 import type { MemeTopBottomProps } from "~/images/meme-top-bottom.fn";
-import type { MemeTopBottomAnnieProps } from "~/annies/meme-top-bottom.fn";
-import type { MemeDistractedBoyfriendAnnieProps } from "~/annies/meme-distracted-boyfriend.fn";
-import type { MemeDrakeHotlineBlingAnnieProps } from "~/annies/meme-drake-hotline-bling.fn";
-import type { MemeChangeMyMindAnnieProps } from "~/annies/meme-change-my-mind.fn";
+import type { MemeDistractedBoyfriendProps } from "~/images/meme-distracted-boyfriend.fn";
+import type { MemeDrakeHotlineBlingProps } from "~/images/meme-drake-hotline-bling.fn";
+import type { MemeChangeMyMindProps } from "~/images/meme-change-my-mind.fn";
+import type { MemeTopBottomCaptionProps } from "~/annies/meme-top-bottom-caption.fn";
+import type { MemeDistractedBoyfriendLabelsProps } from "~/annies/meme-distracted-boyfriend-labels.fn";
+import type { MemeDrakeHotlineBlingLabelsProps } from "~/annies/meme-drake-hotline-bling-labels.fn";
+import type { MemeChangeMyMindTextProps } from "~/annies/meme-change-my-mind-text.fn";
+import { loadFonts, antonRegular } from "~/fonts";
+import { computeMemeTopBottomLayout } from "~/meme-top-bottom-layout";
 
 export const propsSchema = z.object({});
 type MemeMedleyProps = z.infer<typeof propsSchema>;
@@ -28,63 +33,135 @@ export async function runner({
   const topBottomTopText = "They photosynthesize";
   const topBottomBottomText = "I render videos in TypeScript";
 
-  const topBottomAnnie = await fnUrl(
-    "annie",
-    "meme-top-bottom",
-    {
-      imageUrl: topBottomImageUrl,
-      topText: topBottomTopText,
-      bottomText: topBottomBottomText,
-      frameCount,
-    } satisfies MemeTopBottomAnnieProps,
-    { width, height },
-  );
+  // Compute the top-bottom layout once so the background image and the two
+  // caption annies all agree on font size and anchor offsets.
+  const fonts = await loadFonts([antonRegular]);
+  const topBottomLayout = await computeMemeTopBottomLayout({
+    width,
+    height,
+    imageUrl: topBottomImageUrl,
+    topText: topBottomTopText,
+    bottomText: topBottomBottomText,
+    font: fonts[0],
+  });
 
-  const distractedBoyfriendAnnie = await fnUrl(
-    "annie",
-    "meme-distracted-boyfriend",
+  const captionConfigs: Array<{
+    text: string;
+    anchor: "top" | "bottom";
+    offsetY: number;
+    startDelayFrac: number;
+  }> = [
     {
-      otherWomanLabel: "JSX on Effing Canvas",
-      boyfriendLabel: "Me",
-      girlfriendLabel: "Puppeteer",
-      frameCount,
-    } satisfies MemeDistractedBoyfriendAnnieProps,
-    { width, height },
-  );
+      text: topBottomTopText,
+      anchor: "top",
+      offsetY: topBottomLayout.topOffsetY,
+      startDelayFrac: 0.08,
+    },
+    {
+      text: topBottomBottomText,
+      anchor: "bottom",
+      offsetY: topBottomLayout.bottomOffsetY,
+      startDelayFrac: 0.42,
+    },
+  ];
 
-  const drakeAnnie = await fnUrl(
-    "annie",
-    "meme-drake-hotline-bling",
-    {
-      rejectLabel: "Reading the FFmpeg manual",
-      approveLabel: "Reading the Effing manual",
-      frameCount,
-    } satisfies MemeDrakeHotlineBlingAnnieProps,
-    { width, height },
-  );
-
-  const changeMyMindAnnie = await fnUrl(
-    "annie",
-    "meme-change-my-mind",
-    {
-      text: "JSX is a fine effing language",
-      frameCount,
-    } satisfies MemeChangeMyMindAnnieProps,
-    { width, height },
-  );
-
-  // The cover is the poster frame — re-use the still version of the first
-  // meme rendered with the same labels as the annie segment.
-  const cover = await fnUrl(
-    "image",
-    "meme-top-bottom",
-    {
-      imageUrl: topBottomImageUrl,
-      topText: topBottomTopText,
-      bottomText: topBottomBottomText,
-    } satisfies MemeTopBottomProps,
-    { width, height },
-  );
+  const [
+    topBottomBackground,
+    topCaptionAnnie,
+    bottomCaptionAnnie,
+    cover,
+    distractedBoyfriendBackground,
+    distractedBoyfriendAnnie,
+    drakeBackground,
+    drakeAnnie,
+    changeMyMindBackground,
+    changeMyMindAnnie,
+  ] = await Promise.all([
+    fnUrl(
+      "image",
+      "meme-top-bottom",
+      { imageUrl: topBottomImageUrl } satisfies MemeTopBottomProps,
+      { width, height },
+    ),
+    ...captionConfigs.map((cfg) =>
+      fnUrl(
+        "annie",
+        "meme-top-bottom-caption",
+        {
+          text: cfg.text,
+          fontSize: topBottomLayout.fontSize,
+          anchor: cfg.anchor,
+          offsetY: cfg.offsetY,
+          paddingX: topBottomLayout.padding,
+          startDelayFrac: cfg.startDelayFrac,
+          revealFrac: 0.32,
+          frameCount,
+        } satisfies MemeTopBottomCaptionProps,
+        { width, height },
+      ),
+    ),
+    // Cover = poster frame of the first segment. Pass the resolved fontSize
+    // so the still doesn't redo the font-fit binary search.
+    fnUrl(
+      "image",
+      "meme-top-bottom",
+      {
+        imageUrl: topBottomImageUrl,
+        topText: topBottomTopText,
+        bottomText: topBottomBottomText,
+        fontSize: topBottomLayout.fontSize,
+      } satisfies MemeTopBottomProps,
+      { width, height },
+    ),
+    fnUrl(
+      "image",
+      "meme-distracted-boyfriend",
+      {} satisfies MemeDistractedBoyfriendProps,
+      { width, height },
+    ),
+    fnUrl(
+      "annie",
+      "meme-distracted-boyfriend-labels",
+      {
+        otherWomanLabel: "JSX on Effing Canvas",
+        boyfriendLabel: "Me",
+        girlfriendLabel: "Puppeteer",
+        frameCount,
+      } satisfies MemeDistractedBoyfriendLabelsProps,
+      { width, height },
+    ),
+    fnUrl(
+      "image",
+      "meme-drake-hotline-bling",
+      {} satisfies MemeDrakeHotlineBlingProps,
+      { width, height },
+    ),
+    fnUrl(
+      "annie",
+      "meme-drake-hotline-bling-labels",
+      {
+        rejectLabel: "Reading the FFmpeg manual",
+        approveLabel: "Reading the Effing manual",
+        frameCount,
+      } satisfies MemeDrakeHotlineBlingLabelsProps,
+      { width, height },
+    ),
+    fnUrl(
+      "image",
+      "meme-change-my-mind",
+      {} satisfies MemeChangeMyMindProps,
+      { width, height },
+    ),
+    fnUrl(
+      "annie",
+      "meme-change-my-mind-text",
+      {
+        text: "JSX is a fine effing language",
+        frameCount,
+      } satisfies MemeChangeMyMindTextProps,
+      { width, height },
+    ),
+  ]);
 
   return effieData({
     width,
@@ -97,19 +174,34 @@ export async function runner({
         duration: SEGMENT_DURATION,
         layers: [
           {
+            type: "image",
+            source: topBottomBackground,
+            effects: [{ type: "fade-in", start: 0, duration: 0.3 }],
+          },
+          {
             type: "animation",
-            source: topBottomAnnie,
+            source: topCaptionAnnie,
+            effects: [{ type: "fade-in", start: 0, duration: 0.3 }],
+          },
+          {
+            type: "animation",
+            source: bottomCaptionAnnie,
             effects: [{ type: "fade-in", start: 0, duration: 0.3 }],
           },
         ],
       }),
+      // Subsequent segments: a static image is visible from t=0 so the
+      // transition has meaningful pixels to blend, while the animation layer
+      // is delayed until the transition has finished.
       effieSegment({
         duration: SEGMENT_DURATION,
         transition: { type: "zoom", duration: TRANSITION_DURATION },
         layers: [
+          { type: "image", source: distractedBoyfriendBackground },
           {
             type: "animation",
             source: distractedBoyfriendAnnie,
+            delay: TRANSITION_DURATION,
           },
         ],
       }),
@@ -121,9 +213,11 @@ export async function runner({
           duration: TRANSITION_DURATION,
         },
         layers: [
+          { type: "image", source: drakeBackground },
           {
             type: "animation",
             source: drakeAnnie,
+            delay: TRANSITION_DURATION,
           },
         ],
       }),
@@ -131,9 +225,11 @@ export async function runner({
         duration: SEGMENT_DURATION,
         transition: { type: "fade", duration: TRANSITION_DURATION },
         layers: [
+          { type: "image", source: changeMyMindBackground },
           {
             type: "animation",
             source: changeMyMindAnnie,
+            delay: TRANSITION_DURATION,
           },
         ],
       }),
