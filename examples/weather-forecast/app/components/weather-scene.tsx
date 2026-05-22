@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { wmoCategory } from "./weather-codes";
+import { designUnit } from "./design-unit";
 
 type WeatherSceneProps = {
   wmoCode: number;
@@ -176,9 +177,10 @@ function ClearScene({
   height: number;
   progress: number;
 }) {
+  const unit = designUnit(width, height);
   const cx = width * 0.78;
   const cy = height * 0.18;
-  const r = Math.min(width, height) * 0.08;
+  const r = unit * 0.08;
   const rotation = progress * 40;
   const pulse = 0.5 + 0.15 * Math.sin(progress * Math.PI * 4);
   return (
@@ -197,12 +199,13 @@ function PartlyCloudyScene({
   height: number;
   progress: number;
 }) {
+  const unit = designUnit(width, height);
   const cx = width * 0.78;
   const cy = height * 0.18;
-  const r = Math.min(width, height) * 0.07;
+  const r = unit * 0.07;
   const rotation = progress * 30;
   const drift = ((progress * 0.3) % 1) * width * 0.1;
-  const cloudScale = Math.min(width, height);
+  const cloudScale = unit;
   return (
     <SceneSvg width={width} height={height}>
       <Sun cx={cx} cy={cy} r={r} rotation={rotation} raysPulse={0.3} />
@@ -232,7 +235,7 @@ function OvercastScene({
   progress: number;
 }) {
   const drift = progress * width * 0.08;
-  const s = Math.min(width, height) * 0.07;
+  const s = designUnit(width, height) * 0.07;
   return (
     <SceneSvg width={width} height={height}>
       <Cloud
@@ -384,7 +387,7 @@ function ThunderScene({
   progress: number;
 }) {
   const drift = progress * width * 0.06;
-  const s = Math.min(width, height) * 0.07;
+  const s = designUnit(width, height) * 0.07;
   const flash = flashStrength(progress, 0.25) + flashStrength(progress, 0.7);
   const boltOpacity = Math.min(1, flash);
   return (

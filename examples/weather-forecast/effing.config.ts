@@ -9,6 +9,9 @@ export default defineConfig({
     host: "127.0.0.1",
     port: 3839, // 3839 = 0xEFF, how effing cool is that? ʘ‿ʘ
     ffs: true, // auto-start FFS sidecar (when installed)
-    resolutions: [{ width: 1080, height: 1920, label: "9:16" }],
+    resolutions: [
+      { width: 1080, height: 1350, label: "4:5" },
+      { width: 1080, height: 1920, label: "9:16" },
+    ],
   },
 });

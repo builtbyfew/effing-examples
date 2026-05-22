@@ -1,3 +1,5 @@
+import { designUnit } from "./design-unit";
+
 type TemperatureDisplayProps = {
   city: string;
   maxTemperature: number;
@@ -13,12 +15,13 @@ export function TemperatureDisplay({
   width,
   height,
 }: TemperatureDisplayProps) {
-  const cityFontSize = Math.round(width * 0.045);
-  const tempFontSize = Math.round(width * 0.28);
+  const unit = designUnit(width, height);
+  const cityFontSize = Math.round(unit * 0.045);
+  const tempFontSize = Math.round(unit * 0.28);
   const cityLetterSpacing = Math.round(cityFontSize * 0.18);
   const cityTop = Math.round(height * 0.28);
   const tempTop = Math.round(height * 0.34);
-  const shadow = `0 ${Math.round(width * 0.005)}px ${Math.round(width * 0.012)}px rgba(0,0,0,0.25)`;
+  const shadow = `0 ${Math.round(unit * 0.005)}px ${Math.round(unit * 0.012)}px rgba(0,0,0,0.25)`;
 
   return (
     <div

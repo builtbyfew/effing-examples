@@ -3,6 +3,7 @@ import { tween } from "@effing/tween";
 import { createCanvas, renderReactElement } from "@effing/canvas";
 import type { RunnerArgs, AnnieRunnerReturn } from "@effing/fn";
 import { PelicanOnBike } from "~/components/pelican-on-bike";
+import { designUnit } from "~/components/design-unit";
 
 export const propsSchema = z.object({
   frameCount: z.number().int().min(1).optional(),
@@ -28,7 +29,7 @@ export async function* runner({
   props: { frameCount = 105, wheelTurns = 7 / 3, bobAmplitude = 8 },
   bounds: { width, height },
 }: RunnerArgs<PelicanOnBikeProps>): AnnieRunnerReturn {
-  const pelicanWidth = Math.round(width * 0.7);
+  const pelicanWidth = Math.round(designUnit(width, height) * 0.7);
 
   yield* tween(frameCount, async ({ lower: p }) => {
     const wheelAngle = p * 360 * wheelTurns;

@@ -6,6 +6,7 @@ import { PelicanOnBike } from "~/components/pelican-on-bike";
 import { TemperatureDisplay } from "~/components/temperature-display";
 import { WeatherScene } from "~/components/weather-scene";
 import { skyGradient, wmoCategory } from "~/components/weather-codes";
+import { designUnit } from "~/components/design-unit";
 
 export const propsSchema = z.object({
   city: z.string().min(1),
@@ -27,7 +28,7 @@ export async function runner({
 }: RunnerArgs<WeatherPelicansCoverProps>): ImageRunnerReturn {
   const fonts = await loadFonts([interBold]);
   const sky = skyGradient(wmoCategory(wmoCode));
-  const pelicanWidth = Math.round(width * 0.7);
+  const pelicanWidth = Math.round(designUnit(width, height) * 0.7);
 
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
