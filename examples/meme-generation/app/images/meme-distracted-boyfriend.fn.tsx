@@ -3,6 +3,7 @@ import type { RunnerArgs, ImageRunnerReturn } from "@effing/fn";
 import { createCanvas, renderReactElement } from "@effing/canvas";
 import { loadFonts, antonRegular } from "~/fonts";
 import { MemeCaption } from "~/meme-caption";
+import { BlurredBackground } from "~/meme-blurred-background";
 
 const IMAGE_URL = "https://static.effing.dev/meme/Distracted-Boyfriend.jpg";
 const IMAGE_ASPECT = 1200 / 800;
@@ -59,9 +60,9 @@ export async function runner({
         width,
         height,
         display: "flex",
-        backgroundColor: "#000000",
       }}
     >
+      <BlurredBackground imageUrl={IMAGE_URL} width={width} height={height} />
       <img
         src={IMAGE_URL}
         width={width}

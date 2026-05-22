@@ -4,6 +4,7 @@ import { createCanvas, renderReactElement } from "@effing/canvas";
 import { loadFonts, antonRegular } from "~/fonts";
 import { MemeCaption } from "~/meme-caption";
 import { computeMemeTopBottomLayout } from "~/meme-top-bottom-layout";
+import { BlurredBackground } from "~/meme-blurred-background";
 
 export const propsSchema = z.object({
   imageUrl: z.string().url(),
@@ -51,9 +52,9 @@ export async function runner({
         width,
         height,
         display: "flex",
-        backgroundColor: "#000000",
       }}
     >
+      <BlurredBackground imageUrl={imageUrl} width={width} height={height} />
       <img
         src={imageUrl}
         width={width}

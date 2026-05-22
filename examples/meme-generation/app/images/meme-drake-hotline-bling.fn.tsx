@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { RunnerArgs, ImageRunnerReturn } from "@effing/fn";
 import { createCanvas, renderReactElement } from "@effing/canvas";
 import { loadFonts, robotoBold } from "~/fonts";
+import { BlurredBackground } from "~/meme-blurred-background";
 
 const IMAGE_URL = "https://static.effing.dev/meme/Drake-Hotline-Bling.jpg";
 const IMAGE_ASPECT = 1; // 1200x1200, two 1200x600 panels stacked
@@ -48,9 +49,9 @@ export async function runner({
         width,
         height,
         display: "flex",
-        backgroundColor: "#000000",
       }}
     >
+      <BlurredBackground imageUrl={IMAGE_URL} width={width} height={height} />
       <img
         src={IMAGE_URL}
         width={width}
