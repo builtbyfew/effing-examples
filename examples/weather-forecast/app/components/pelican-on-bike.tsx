@@ -944,26 +944,32 @@ function Head({
       />
       <Crest wiggle={crestWiggle} />
       <path
-        d="M 168 13 L 200 14 L 178 18 Z"
+        d="M 167 12 Q 184 10.5 200 14 Q 207 15.5 207 17.5 Q 206 19 202 18.5 L 167 17 Z"
         fill="url(#beakUpperGrad)"
       />
       <path
-        d="M 168 13 L 200 14"
+        d="M 167 12.5 Q 184 11 200 14.5 Q 205.5 16 206 17.5"
         stroke="#a35d09"
         strokeWidth="0.4"
         fill="none"
         opacity="0.7"
       />
-      <circle cx="200" cy="14" r="1" fill="#5a3603" />
-      <ellipse
-        cx="170"
-        cy="14.5"
-        rx="2"
-        ry="0.8"
-        fill="#ffd370"
-        opacity="0.5"
+      <path
+        d="M 203 18.5 Q 205.5 18.5 207 17.5"
+        stroke="#5a3603"
+        strokeWidth="0.5"
+        fill="none"
+        opacity="0.8"
       />
-      <g transform={`rotate(${beakOpenAngle} 170 18)`}>
+      <ellipse
+        cx="178"
+        cy="13.5"
+        rx="6"
+        ry="0.7"
+        fill="#ffd370"
+        opacity="0.55"
+      />
+      <g transform={`rotate(${beakOpenAngle} 167 17)`}>
         <LowerBeak pouchSway={pouchSway} />
       </g>
       <circle cx="163" cy="11.4" r="2.6" fill="#ffffff" />
@@ -1027,27 +1033,48 @@ function Crest({ wiggle }: { wiggle: number }) {
 }
 
 function LowerBeak({ pouchSway }: { pouchSway: number }) {
+  const pouchDip = 32 + pouchSway;
+  const pouchMidX = 188;
+  const pouchMidY = 29 + pouchSway * 0.4;
   return (
     <g>
       <path
-        d="M 170 18 L 200 14 L 192 22 Q 180 26 170 22 Z"
+        d={
+          `M 167 17` +
+          ` L 202 18.5` +
+          ` Q 200 21 195 21` +
+          ` Q 182 21.5 167 19.5 Z`
+        }
         fill="url(#beakLowerGrad)"
       />
       <path
         d={
-          `M 170 22` +
-          ` Q ${178 + pouchSway} 30 187 ${28 + pouchSway * 0.4}` +
-          ` Q 192 25 192 22` +
-          ` Q 184 24 170 22 Z`
+          `M 168 19.5` +
+          ` Q ${176 + pouchSway * 0.6} ${pouchDip} ${pouchMidX} ${pouchMidY}` +
+          ` Q 196 25 198 21` +
+          ` Q 184 21 168 19.5 Z`
         }
         fill="url(#pouchGrad)"
       />
       <path
-        d="M 175 24 Q 182 27 188 26"
+        d={
+          `M 173 22` +
+          ` Q ${182 + pouchSway * 0.4} ${27 + pouchSway * 0.3} 192 25`
+        }
         stroke="#a35d09"
         strokeWidth="0.4"
         fill="none"
-        opacity="0.55"
+        opacity="0.5"
+      />
+      <path
+        d={
+          `M 170 20.5` +
+          ` Q ${180 + pouchSway * 0.4} ${24 + pouchSway * 0.3} 194 23`
+        }
+        stroke="#a35d09"
+        strokeWidth="0.3"
+        fill="none"
+        opacity="0.35"
       />
     </g>
   );
