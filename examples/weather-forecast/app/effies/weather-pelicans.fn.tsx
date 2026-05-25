@@ -63,6 +63,7 @@ export async function runner({
     "weather-pelicans-cover",
     {
       city,
+      dateLabel: formatDateLabel(days[0].date),
       maxTemperature: days[0].maxTemperature,
       wmoCode: days[0].wmoCode,
     } satisfies WeatherPelicansCoverProps,
@@ -128,14 +129,14 @@ export async function runner({
           { type: "animation", source: weatherUrl },
           { type: "animation", source: "#pelican" },
           {
-            type: "animation",
-            source: tempUrl,
+            type: "image",
+            source: badgeUrl,
             delay: transitionLeadIn,
             effects: [{ type: "fade-in", start: 0, duration: 0.4 }],
           },
           {
-            type: "image",
-            source: badgeUrl,
+            type: "animation",
+            source: tempUrl,
             delay: transitionLeadIn,
             effects: [{ type: "fade-in", start: 0.2, duration: 0.4 }],
           },

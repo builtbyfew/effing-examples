@@ -3,7 +3,6 @@ import { tween } from "@effing/tween";
 import { createCanvas, renderReactElement } from "@effing/canvas";
 import type { RunnerArgs, AnnieRunnerReturn } from "@effing/fn";
 import { PelicanOnBike } from "~/components/pelican-on-bike";
-import { designUnit } from "~/components/design-unit";
 
 export const propsSchema = z.object({
   frameCount: z.number().int().min(1).optional(),
@@ -29,7 +28,7 @@ export async function* runner({
   props: { frameCount = 105, wheelTurns = 7 / 3, bobAmplitude = 8 },
   bounds: { width, height },
 }: RunnerArgs<PelicanOnBikeProps>): AnnieRunnerReturn {
-  const pelicanWidth = Math.round(designUnit(width, height) * 0.7);
+  const pelicanWidth = Math.round(width * 0.88);
 
   yield* tween(frameCount, async ({ lower: p }) => {
     const wheelAngle = p * 360 * wheelTurns;
@@ -39,23 +38,24 @@ export async function* runner({
     const ctx = canvas.getContext("2d");
     await renderReactElement(
       ctx,
-      <div
-        style={{
-          width,
-          height,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "flex-end",
-          paddingBottom: Math.round(height * 0.08),
-        }}
-      >
-        <PelicanOnBike
-          width={pelicanWidth}
-          wheelAngle={wheelAngle}
-          bobOffset={bobOffset}
-          progress={p}
-        />
+      <div style={{ width, height, display: "flex" }}>
+        <div
+          style={{
+            position: "absolute",
+            left: -Math.round(width * 0.18),
+            right: 0,
+            bottom: Math.round(height * 0.04),
+            display: "flex",
+            justifyContent: "flex-end",
+          }}
+        >
+          <PelicanOnBike
+            width={pelicanWidth}
+            wheelAngle={wheelAngle}
+            bobOffset={bobOffset}
+            progress={p}
+          />
+        </div>
       </div>,
       { fonts: [] },
     );

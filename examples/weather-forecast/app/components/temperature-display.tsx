@@ -16,12 +16,12 @@ export function TemperatureDisplay({
   height,
 }: TemperatureDisplayProps) {
   const unit = designUnit(width, height);
-  const cityFontSize = Math.round(unit * 0.045);
-  const tempFontSize = Math.round(unit * 0.28);
-  const cityLetterSpacing = Math.round(cityFontSize * 0.18);
-  const cityTop = Math.round(height * 0.28);
-  const tempTop = Math.round(height * 0.34);
+  const cityFontSize = Math.round(unit * 0.06);
+  const tempFontSize = Math.round(unit * 0.26);
+  const cityLetterSpacing = Math.round(cityFontSize * 0.22);
   const shadow = `0 ${Math.round(unit * 0.005)}px ${Math.round(unit * 0.012)}px rgba(0,0,0,0.25)`;
+  const padLeft = Math.round(width * 0.08);
+  const padTop = Math.round(height * 0.17);
 
   return (
     <div
@@ -33,12 +33,13 @@ export function TemperatureDisplay({
         height,
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
+        alignItems: "flex-start",
+        paddingTop: padTop,
+        paddingLeft: padLeft,
       }}
     >
       <div
         style={{
-          marginTop: cityTop,
           fontFamily: "Inter",
           fontWeight: 700,
           fontSize: cityFontSize,
@@ -46,19 +47,19 @@ export function TemperatureDisplay({
           color: "#ffffff",
           textTransform: "uppercase",
           textShadow: shadow,
+          marginBottom: Math.round(cityFontSize * 0.4),
         }}
       >
         {city.toUpperCase()}
       </div>
       <div
         style={{
-          marginTop: tempTop - cityTop - cityFontSize,
           fontFamily: "Inter",
           fontWeight: 700,
           fontSize: tempFontSize,
           color: "#ffffff",
           textShadow: shadow,
-          lineHeight: 1,
+          lineHeight: 0.9,
           display: "flex",
           alignItems: "flex-start",
         }}
@@ -67,7 +68,7 @@ export function TemperatureDisplay({
         <span
           style={{
             fontSize: tempFontSize * 0.55,
-            marginTop: tempFontSize * 0.05,
+            marginTop: tempFontSize * 0.02,
             marginLeft: tempFontSize * 0.02,
           }}
         >

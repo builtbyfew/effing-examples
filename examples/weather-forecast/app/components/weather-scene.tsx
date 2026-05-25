@@ -210,13 +210,13 @@ function PartlyCloudyScene({
     <SceneSvg width={width} height={height}>
       <Sun cx={cx} cy={cy} r={r} rotation={rotation} raysPulse={0.3} />
       <Cloud
-        cx={width * 0.32 + drift}
+        cx={width * 0.55 + drift}
         cy={height * 0.22}
         scale={cloudScale * 0.06}
         fill="#ffffff"
       />
       <Cloud
-        cx={width * 0.62 - drift * 0.6}
+        cx={width * 0.72 - drift * 0.6}
         cy={height * 0.32}
         scale={cloudScale * 0.05}
         fill="#f4f7fa"
@@ -239,31 +239,31 @@ function OvercastScene({
   return (
     <SceneSvg width={width} height={height}>
       <Cloud
-        cx={width * 0.2 + drift * 0.6}
+        cx={width * 0.5 + drift * 0.6}
         cy={height * 0.13}
         scale={s * 1.1}
         fill="#dde3ea"
       />
       <Cloud
-        cx={width * 0.65 + drift * 0.4}
+        cx={width * 0.75 + drift * 0.4}
         cy={height * 0.09}
         scale={s * 1.3}
         fill="#cfd6de"
       />
       <Cloud
-        cx={width * 0.45 - drift * 0.5}
+        cx={width * 0.6 - drift * 0.5}
         cy={height * 0.22}
         scale={s * 1.5}
         fill="#e6ecf2"
       />
       <Cloud
-        cx={width * 0.85 - drift * 0.3}
+        cx={width * 0.88 - drift * 0.3}
         cy={height * 0.28}
         scale={s * 1.0}
         fill="#cfd6de"
       />
       <Cloud
-        cx={width * 0.15 + drift * 0.35}
+        cx={width * 0.55 + drift * 0.35}
         cy={height * 0.32}
         scale={s * 0.95}
         fill="#dde3ea"
@@ -401,19 +401,19 @@ function ThunderScene({
         opacity={boltOpacity * 0.45}
       />
       <Cloud
-        cx={width * 0.25 + drift * 0.6}
+        cx={width * 0.55 + drift * 0.6}
         cy={height * 0.12}
         scale={s * 1.4}
         fill="#3a3f4a"
       />
       <Cloud
-        cx={width * 0.7 + drift * 0.4}
+        cx={width * 0.82 + drift * 0.4}
         cy={height * 0.1}
         scale={s * 1.5}
         fill="#2c303a"
       />
       <Cloud
-        cx={width * 0.5 - drift * 0.5}
+        cx={width * 0.7 - drift * 0.5}
         cy={height * 0.23}
         scale={s * 1.7}
         fill="#454a55"
