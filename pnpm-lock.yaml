@@ -8,7 +8,7 @@ importers:
 
   .: {}
 
-  examples/meme-generation:
+  projects/meme-generation:
     dependencies:
       '@effing/annie':
         specifier: ^0.35.2
@@ -54,7 +54,7 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
-  examples/real-estate:
+  projects/real-estate:
     dependencies:
       '@effing/annie':
         specifier: ^0.35.2
@@ -100,7 +100,7 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
-  examples/weather-forecast:
+  projects/weather-forecast:
     dependencies:
       '@effing/annie':
         specifier: ^0.35.2

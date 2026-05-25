@@ -4,19 +4,19 @@ A monorepo of [Effing](https://effing.dev) example projects.
 
 ## Structure
 
-Each example lives in its own package under `examples/`:
+Each example project lives in its own package under `projects/`:
 
 ```
-examples/
-  <example-name>/
+projects/
+  <project-name>/
 ```
 
-## Adding an example
+## Adding an example project
 
 From the repo root:
 
 ```sh
-cd examples
+cd projects
 pnpm create @effing
 ```
 
@@ -26,8 +26,8 @@ Then install workspace dependencies from the root:
 pnpm install
 ```
 
-## Working in an example
+## Working in an example project
 
 ```sh
-pnpm --filter <example-name> <script>
+pnpm --filter <project-name> <script>
 ```
