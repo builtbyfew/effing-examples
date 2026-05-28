@@ -27,11 +27,11 @@ type MessagingProps = z.infer<typeof propsSchema>;
 
 export const previewProps: MessagingProps = {
   contactA: "Bryan",
-  contactB: "AirFlow Pro",
+  contactB: "Sneakies Sneakers",
   messages: [
     {
       sender: "b",
-      imageUrl: "https://static.effing.dev/unsplash/sneakers/ryan-waring-164_6wVEHfI-unsplash.jpg",
+      imageUrl: "https://static.effing.dev/unsplash/sneakers/max-petrunin-A4fETzh_wlo-unsplash.jpg",
       text: "New drop 🔥 The AirFlow Pro just launched",
     },
     { sender: "a", text: "These look incredible, are they available now?" },
