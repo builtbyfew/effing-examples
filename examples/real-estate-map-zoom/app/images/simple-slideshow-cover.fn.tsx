@@ -2,7 +2,6 @@ import { z } from "zod";
 import type { RunnerArgs, ImageRunnerReturn } from "@effing/fn";
 import { createCanvas, renderReactElement } from "@effing/canvas";
 import { loadFonts, interSemiBold } from "~/fonts";
-import { TextTypewriterOverlay } from "~/annies/text-typewriter.fn";
 
 export const propsSchema = z.object({
   imageUrl: z.string().url(),
@@ -35,16 +34,11 @@ export async function runner({
         height,
         display: "flex",
         backgroundImage: `url(${imageUrl})`,
+        fontSize: fontSize,
+        color: fontColor
       }}
     >
-      <TextTypewriterOverlay
-        text={text}
-        fontSize={fontSize}
-        fontColor={fontColor}
-        horizontalAlignment="center"
-        verticalAlignment="center"
-        cursorShown={false}
-      />
+      {text}
     </div>,
     { fonts },
   );

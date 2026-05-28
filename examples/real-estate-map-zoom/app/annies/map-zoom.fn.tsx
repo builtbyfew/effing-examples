@@ -4,6 +4,8 @@ import type { Canvas, SKRSContext2D } from "@effing/canvas";
 import { Path2D } from "@napi-rs/canvas";
 import { tween, easeInOutCubic, easeOutBack } from "@effing/tween";
 import type { RunnerArgs, AnnieRunnerReturn } from "@effing/fn";
+import { interSemiBold, loadFonts } from "~/fonts";
+import { AddressCardOverlay, getCardMetrics } from "~/images/address-card.fn";
 
 export const propsSchema = z.object({
   lat: z.number().min(-90).max(90),
@@ -141,6 +143,20 @@ function drawHouseIcon(ctx: SKRSContext2D, x: number, y: number, displaySize: nu
   ctx.restore();
 }
 
+function drawAttribution(ctx: SKRSContext2D, width: number, height: number) {
+  const fontSize = Math.max(11, Math.round(width / 90));
+  const text = "© CARTO  ©  OpenStreetMap contributors";
+  const pad = Math.round(fontSize * 0.55);
+  ctx.save();
+  ctx.font = `${fontSize}px sans-serif`;
+  const textW = ctx.measureText(text).width;
+  ctx.fillStyle = "rgba(255, 255, 255, 0.72)";
+  ctx.fillRect(0, height - fontSize - pad * 2, textW + pad * 2, fontSize + pad * 2);
+  ctx.fillStyle = "#333333";
+  ctx.fillText(text, pad, height - pad);
+  ctx.restore();
+}
+
 function drawDot(ctx: SKRSContext2D, x: number, y: number) {
   ctx.save();
   ctx.shadowColor = "rgba(183, 28, 28, 0.65)";
@@ -157,10 +173,14 @@ function drawDot(ctx: SKRSContext2D, x: number, y: number) {
   ctx.restore();
 }
 
+const SLIDE_TO_BOTTOM_FRAMES = 30; // 1s — card slides from center to bottom
+const HOLD_AT_BOTTOM_FRAMES = 30; // 1s — card rests at bottom before the transition starts
+
 export async function* runner({
   props: { lat, lon, address, zoom = 16, frameCount = 240 },
   bounds: { width, height },
 }: RunnerArgs<MapZoomProps>): AnnieRunnerReturn {
+  const fonts = await loadFonts([interSemiBold]);
   const zoomLevels = [zoom - 8, zoom - 4, zoom];
   const comps = await Promise.all([
     buildComposite(lat, lon, zoomLevels[0], 3, "light_all"),
@@ -188,9 +208,11 @@ export async function* runner({
   const zoomFrames = Math.round(frameCount * 0.55);
   const pinFrames = Math.round(frameCount * 0.15);
   const holdFrames = frameCount - zoomFrames - pinFrames;
+  const holdOnlyFrames = Math.max(0, holdFrames - SLIDE_TO_BOTTOM_FRAMES - HOLD_AT_BOTTOM_FRAMES);
 
   const houseSize = Math.round(width / 10);
   const gap = 24;
+  const { centerY, bottomY } = getCardMetrics(width, height);
 
   // Phase 1: smooth zoom from country level to street level
   yield* tween(zoomFrames, async ({ lower: p }) => {
@@ -216,6 +238,7 @@ export async function* runner({
       drawMapCrop(ctx, comps[2], unifCrop / scales[2], width, height, 1);
     }
 
+    drawAttribution(ctx, width, height);
     drawDot(ctx, width / 2, height / 2);
     return canvas.encode("jpeg");
   });
@@ -225,6 +248,7 @@ export async function* runner({
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
     drawMapCrop(ctx, comps[2], endCrops[2], width, height, 1);
+    drawAttribution(ctx, width, height);
 
     if (p < 0.85) {
       const rt = p / 0.85;
@@ -244,14 +268,54 @@ export async function* runner({
     return canvas.encode("jpeg");
   });
 
-  // Pre-render hold frame once — map + pin + address card, reused for every hold frame
+  // Pre-render hold frame once — map + pin + address card at center
   const holdCanvas = createCanvas(width, height);
   const holdCtx = holdCanvas.getContext("2d");
   drawMapCrop(holdCtx, comps[2], endCrops[2], width, height, 1);
+  drawAttribution(holdCtx, width, height);
   drawDot(holdCtx, width / 2, height / 2);
   drawHouseIcon(holdCtx, width / 2, height / 2 - gap, houseSize);
+  await renderReactElement(
+    holdCtx,
+    <AddressCardOverlay address={address} width={width} height={height} cardY={centerY} />,
+    { fonts },
+  );
   const holdBuffer = await holdCanvas.encode("jpeg");
 
-  // Phase 3: hold — yield the same pre-rendered buffer every frame
-  yield* tween(holdFrames, async () => holdBuffer);
+  // Phase 3: hold — card at center
+  if (holdOnlyFrames > 0) {
+    yield* tween(holdOnlyFrames, async () => holdBuffer);
+  }
+
+  // Phase 4: card slides from center down to bottom
+  yield* tween(SLIDE_TO_BOTTOM_FRAMES, async ({ lower: p }) => {
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext("2d");
+    drawMapCrop(ctx, comps[2], endCrops[2], width, height, 1);
+    drawAttribution(ctx, width, height);
+    drawDot(ctx, width / 2, height / 2);
+    drawHouseIcon(ctx, width / 2, height / 2 - gap, houseSize);
+    const cardY = Math.round(centerY + (bottomY - centerY) * easeInOutCubic(p));
+    await renderReactElement(
+      ctx,
+      <AddressCardOverlay address={address} width={width} height={height} cardY={cardY} />,
+      { fonts },
+    );
+    return canvas.encode("jpeg");
+  });
+
+  // Phase 5: hold at bottom — card is fully settled before the wipe transition starts
+  const bottomCanvas = createCanvas(width, height);
+  const bottomCtx = bottomCanvas.getContext("2d");
+  drawMapCrop(bottomCtx, comps[2], endCrops[2], width, height, 1);
+  drawAttribution(bottomCtx, width, height);
+  drawDot(bottomCtx, width / 2, height / 2);
+  drawHouseIcon(bottomCtx, width / 2, height / 2 - gap, houseSize);
+  await renderReactElement(
+    bottomCtx,
+    <AddressCardOverlay address={address} width={width} height={height} cardY={bottomY} />,
+    { fonts },
+  );
+  const bottomBuffer = await bottomCanvas.encode("jpeg");
+  yield* tween(HOLD_AT_BOTTOM_FRAMES, async () => bottomBuffer);
 }
