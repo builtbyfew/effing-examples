@@ -281,8 +281,11 @@ function Conversation({
           y -= (bubbleHeights[j] + gap) * slideProgress;
         }
 
-        // Entry: slide up from slightly below its resting position
-        const entryOffset = (1 - easeOutCubic(entryRaw)) * fontSize * 1.5;
+        // Entry: slide in from just below the previous message.
+        // Using slideFrameCount (not entryFrameCount) keeps entry in sync with the
+        // upward slide of older messages, so the gap between them stays constant.
+        const entryProgress = easeOutCubic(clamp01((frame - startFrame) / slideFrameCount));
+        const entryOffset = (1 - entryProgress) * (bubbleHeights[i] + gap);
 
         const isA = msg.sender === "a";
 
