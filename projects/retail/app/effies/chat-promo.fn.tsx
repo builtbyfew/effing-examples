@@ -6,7 +6,7 @@ import {
   chatMessageSchema,
   conversationSchedule,
 } from "~/annies/chat-conversation.fn";
-import { chatSoundEffectsDataUrl } from "~/sfx";
+import { chatSoundEffectsDataUrl, ctaSoundEffectsDataUrl } from "~/sfx";
 import type { ChatConversationProps } from "~/annies/chat-conversation.fn";
 import type { TextTypewriterProps } from "~/annies/text-typewriter.fn";
 import type { ChatHeaderProps } from "~/images/chat-header.fn";
@@ -159,6 +159,21 @@ export async function runner({
       effieSegment({
         duration: ctaDuration,
         transition: { type: "fade", duration: 0.6 },
+        audio: soundEffects
+          ? {
+              source: effieWebUrl(
+                ctaSoundEffectsDataUrl({
+                  durationSec: ctaDuration,
+                  bounceStartSec: 0.3,
+                  bounceDurationSec: 1.2,
+                  typingStartSec: ctaTextDelay,
+                  typingFrameCount,
+                  fps: FPS,
+                }),
+              ),
+              volume: 0.8,
+            }
+          : undefined,
         layers: [
           {
             type: "image",

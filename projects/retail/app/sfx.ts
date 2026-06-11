@@ -86,3 +86,40 @@ export function chatSoundEffectsDataUrl(
 
   return toWavDataUrl(samples);
 }
+
+/**
+ * Effects for the CTA outro: a thud when the price card's bounce starts
+ * (with a softer rebound), keyboard ticks in step with the typewriter
+ * (one character per 3 frames), and a typewriter-bell ding at the end of
+ * the line.
+ */
+export function ctaSoundEffectsDataUrl(opts: {
+  durationSec: number;
+  bounceStartSec: number;
+  bounceDurationSec: number;
+  typingStartSec: number;
+  typingFrameCount: number;
+  fps: number;
+}): string {
+  const {
+    durationSec,
+    bounceStartSec,
+    bounceDurationSec,
+    typingStartSec,
+    typingFrameCount,
+    fps,
+  } = opts;
+  const samples = new Float32Array(Math.ceil(durationSec * SAMPLE_RATE));
+
+  addBlip(samples, bounceStartSec, 0.16, 150, 65, 0.5);
+  addBlip(samples, bounceStartSec, 0.12, 260, 120, 0.2);
+  addBlip(samples, bounceStartSec + bounceDurationSec * 0.5, 0.12, 130, 70, 0.18);
+
+  for (let f = 0; f < typingFrameCount; f += 3) {
+    const wobble = (f / 3) % 2 === 0 ? 1900 : 1750;
+    addBlip(samples, typingStartSec + f / fps, 0.018, wobble, wobble - 150, 0.1);
+  }
+  addBlip(samples, typingStartSec + typingFrameCount / fps, 0.1, 1320, 1310, 0.16);
+
+  return toWavDataUrl(samples);
+}

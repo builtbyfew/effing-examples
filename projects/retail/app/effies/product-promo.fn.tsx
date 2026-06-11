@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { effieData, effieSegment, effieWebUrl } from "@effing/effie";
+import { ctaSoundEffectsDataUrl } from "~/sfx";
 import { fnUrl } from "@effing/fn";
 import type { RunnerArgs, EffieRunnerReturn } from "@effing/fn";
 import type { PhotoZoomProps } from "~/annies/photo-zoom.fn";
@@ -19,6 +20,7 @@ export const propsSchema = z.object({
   ctaText: z.string(),
   imageUrl: z.string().url(),
   accentColor: z.string().optional(),
+  soundEffects: z.boolean().optional(),
   musicUrl: z.string().url().optional(),
 });
 
@@ -55,6 +57,7 @@ export async function runner({
     ctaText,
     imageUrl,
     accentColor = "#7c5cd6",
+    soundEffects = true,
     musicUrl,
   },
   bounds: { width, height },
@@ -183,6 +186,21 @@ export async function runner({
       effieSegment({
         duration: ctaDuration,
         transition: { type: "circle", mode: "open", duration: 0.7 },
+        audio: soundEffects
+          ? {
+              source: effieWebUrl(
+                ctaSoundEffectsDataUrl({
+                  durationSec: ctaDuration,
+                  bounceStartSec: 0.3,
+                  bounceDurationSec: 1.2,
+                  typingStartSec: ctaTextDelay,
+                  typingFrameCount,
+                  fps: FPS,
+                }),
+              ),
+              volume: 0.8,
+            }
+          : undefined,
         layers: [
           {
             type: "image",
