@@ -23,6 +23,18 @@ export const previewProps: SubtitleCoverProps = {
   text: "Captions that actually slap",
 };
 
+/** Darken a `#rrggbb` color by the given factor (0 = black, 1 = unchanged). */
+function shade(hex: string, factor: number): string {
+  const match = /^#?([0-9a-f]{6})$/i.exec(hex);
+  if (!match) return hex;
+  const rgb = parseInt(match[1]!, 16);
+  const channel = (shift: number) =>
+    Math.round(((rgb >> shift) & 0xff) * factor)
+      .toString(16)
+      .padStart(2, "0");
+  return `#${channel(16)}${channel(8)}${channel(0)}`;
+}
+
 export async function runner({
   props: {
     text,
@@ -52,7 +64,7 @@ export async function runner({
         width,
         height,
         display: "flex",
-        backgroundImage: `linear-gradient(160deg, #19102e, #3b1c63, #120b20)`,
+        backgroundImage: `linear-gradient(160deg, ${shade(highlightColor, 0.2)}, ${shade(highlightColor, 0.45)}, ${shade(highlightColor, 0.14)})`,
       }}
     >
       <SubtitleCueOverlay
