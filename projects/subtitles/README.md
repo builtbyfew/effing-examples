@@ -8,7 +8,11 @@ TikTok-style word-by-word subtitles on top of any video, driven entirely by prop
 - **`subtitle-cue`** (annie) — one caption phrase as transparent PNG frames: chunky uppercase words with a thick outline, the currently spoken word popped onto a colored highlight pill.
 - **`subtitle-cover`** (image) — cover still reusing the caption styling on a gradient background.
 
+The preview props caption the opening of NASA's public-domain ["We Chose: The Inspiration of Apollo"](https://images.nasa.gov/details/jsc2019m000363_We_Chose_The_Inspiration_of_Apollo_mp4_1_720) clip — JFK's 1962 Rice University speech — with word timings taken from a Whisper transcription, so the karaoke highlight tracks the actual voice.
+
 ## Example
+
+Cues only need text and a time window; word highlighting is then spread across each cue automatically:
 
 ```sh
 pnpm exec effing url effie subtitled-video --props '{
