@@ -39,8 +39,6 @@ export const previewProps: ProductPromoProps = {
   ctaText: "Shop now at cloudstep.run",
   imageUrl:
     "https://static.effing.dev/unsplash/sneakers/max-petrunin-A4fETzh_wlo-unsplash.jpg",
-  musicUrl:
-    "https://static.effing.dev/elevenlabs/music/Aura_of_Elegance_2026-05-07T174428_var1.mp3",
 };
 
 const FPS = 30;

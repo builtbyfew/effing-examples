@@ -6,6 +6,7 @@ import {
   chatMessageSchema,
   conversationSchedule,
 } from "~/annies/chat-conversation.fn";
+import { chatSoundEffectsDataUrl } from "~/sfx";
 import type { ChatConversationProps } from "~/annies/chat-conversation.fn";
 import type { TextTypewriterProps } from "~/annies/text-typewriter.fn";
 import type { ChatHeaderProps } from "~/images/chat-header.fn";
@@ -27,6 +28,7 @@ export const propsSchema = z.object({
   oldPrice: z.string().optional(),
   ctaText: z.string(),
   accentColor: z.string().optional(),
+  soundEffects: z.boolean().optional(),
   musicUrl: z.string().url().optional(),
 });
 
@@ -56,8 +58,6 @@ export const previewProps: ChatPromoProps = {
   price: "$129",
   oldPrice: "$159",
   ctaText: "Shop now at cloudstep.run",
-  musicUrl:
-    "https://static.effing.dev/elevenlabs/music/Aura_of_Elegance_2026-05-07T174428_var1.mp3",
 };
 
 const FPS = 30;
@@ -76,13 +76,14 @@ export async function runner({
     oldPrice,
     ctaText,
     accentColor = "#7c5cd6",
+    soundEffects = true,
     musicUrl,
   },
   bounds: { width, height },
 }: RunnerArgs<ChatPromoProps>): EffieRunnerReturn {
   // The chat segment lasts exactly as long as the conversation's schedule.
-  const { totalFrameCount } = conversationSchedule(messages, pace);
-  const chatDuration = totalFrameCount / FPS;
+  const schedule = conversationSchedule(messages, pace);
+  const chatDuration = schedule.totalFrameCount / FPS;
   const ctaDuration = 4;
 
   const ctaTextDelay = 0.9;
@@ -115,9 +116,19 @@ export async function runner({
       ? { source: effieWebUrl(musicUrl), volume: 0.45, fadeOut: 1.5 }
       : undefined,
     segments: [
-      // The conversation plays out over the chat chrome.
+      // The conversation plays out over the chat chrome, with message pops
+      // pre-mixed into one track at the schedule's exact offsets (the effie
+      // format has no timed audio cues; see ~/sfx).
       effieSegment({
         duration: chatDuration,
+        audio: soundEffects
+          ? {
+              source: effieWebUrl(
+                chatSoundEffectsDataUrl(messages, schedule, FPS),
+              ),
+              volume: 0.8,
+            }
+          : undefined,
         layers: [
           {
             type: "image",
