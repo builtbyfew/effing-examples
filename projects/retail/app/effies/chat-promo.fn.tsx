@@ -1,27 +1,24 @@
 import { z } from "zod";
-import { effieData, effieSegment, effieWebUrl } from "@effing/effie";
+import { effieData, effieWebUrl, effieSegment } from "@effing/effie";
 import { fnUrl } from "@effing/fn";
 import type { RunnerArgs, EffieRunnerReturn } from "@effing/fn";
-import {
-  chatMessageSchema,
-  conversationSchedule,
-} from "~/annies/chat-conversation.fn";
-import { chatSoundEffectsDataUrl, ctaSoundEffectsDataUrl } from "~/sfx";
+import { chatMessageSchema, sampleConversation } from "~/chat-ui";
+import { conversationSchedule } from "~/annies/chat-conversation.fn";
 import type { ChatConversationProps } from "~/annies/chat-conversation.fn";
-import type { TextTypewriterProps } from "~/annies/text-typewriter.fn";
-import type { ChatHeaderProps } from "~/images/chat-header.fn";
+import type { ChatChromeProps } from "~/images/chat-chrome.fn";
 import type { ChatCoverProps } from "~/images/chat-cover.fn";
-import type { PriceTagProps } from "~/images/price-tag.fn";
+import { ctaOutroPropsSchema, ctaOutroSegment } from "~/effies/cta-outro";
+import { chatSoundEffectsDataUrl } from "~/sound-effects";
+
+// A brand-DM promo: the product is pitched in a messaging conversation —
+// typing indicator, message pops, read receipt — then a CTA outro lands the
+// offer.
 
 export const propsSchema = z.object({
   contactName: z.string(),
   messages: z.array(chatMessageSchema).min(1),
   pace: z.number().positive().optional(),
-  // CTA outro
-  saleLabel: z.string(),
-  price: z.string(),
-  oldPrice: z.string().optional(),
-  ctaText: z.string(),
+  ...ctaOutroPropsSchema.shape,
   accentColor: z.string().optional(),
   soundEffects: z.boolean().optional(),
   musicUrl: z.string().url().optional(),
@@ -31,19 +28,7 @@ type ChatPromoProps = z.infer<typeof propsSchema>;
 
 export const previewProps: ChatPromoProps = {
   contactName: "Sole Mate",
-  messages: [
-    {
-      sender: "contact",
-      imageUrl:
-        "https://static.effing.dev/unsplash/sneakers/max-petrunin-A4fETzh_wlo-unsplash.jpg",
-      text: "The Cloudstep 574 just dropped 👟",
-    },
-    { sender: "user", text: "okay these are gorgeous 😍" },
-    { sender: "user", text: "do they actually feel like clouds?" },
-    { sender: "contact", text: "Literally. Bubble sole, zero break-in." },
-    { sender: "contact", text: "Launch week: $129 with code CLOUD20" },
-    { sender: "user", text: "say less — ordering now 🙌" },
-  ],
+  messages: sampleConversation,
   saleLabel: "Launch week",
   price: "$129",
   oldPrice: "$159",
@@ -70,14 +55,6 @@ export async function runner({
   // The chat segment lasts exactly as long as the conversation's schedule.
   const schedule = conversationSchedule(messages, pace);
   const chatDuration = schedule.totalFrameCount / FPS;
-  const ctaDuration = 4;
-
-  const ctaTextDelay = 0.9;
-  const typingFrameCount = Math.min(ctaText.length * 3, 60);
-  const blinkingFrameCount = Math.max(
-    Math.round((ctaDuration - ctaTextDelay) * FPS) - typingFrameCount,
-    0,
-  );
 
   const cover = await fnUrl(
     "image",
@@ -103,7 +80,7 @@ export async function runner({
     segments: [
       // The conversation plays out over the chat chrome, with message pops
       // pre-mixed into one track at the schedule's exact offsets (the effie
-      // format has no timed audio cues; see ~/sfx).
+      // format has no timed audio cues; see ~/sound-effects).
       effieSegment({
         duration: chatDuration,
         audio: soundEffects
@@ -119,8 +96,8 @@ export async function runner({
             type: "image",
             source: await fnUrl(
               "image",
-              "chat-header",
-              { contactName, accentColor } satisfies ChatHeaderProps,
+              "chat-chrome",
+              { contactName, accentColor } satisfies ChatChromeProps,
               { width, height },
             ),
           },
@@ -140,60 +117,14 @@ export async function runner({
           },
         ],
       }),
-      // CTA outro: price tag bounces in, typewriter spells the call to action.
-      effieSegment({
-        duration: ctaDuration,
+      await ctaOutroSegment({
+        props: { saleLabel, price, oldPrice, ctaText },
+        accentColor,
+        soundEffects,
         transition: { type: "fade", duration: 0.6 },
-        audio: soundEffects
-          ? {
-              source: effieWebUrl(
-                ctaSoundEffectsDataUrl({
-                  durationSec: ctaDuration,
-                  bounceStartSec: 0.3,
-                  bounceDurationSec: 1.2,
-                  typingStartSec: ctaTextDelay,
-                  typingFrameCount,
-                  fps: FPS,
-                }),
-              ),
-              volume: 0.8,
-            }
-          : undefined,
-        layers: [
-          {
-            type: "image",
-            source: await fnUrl(
-              "image",
-              "price-tag",
-              {
-                label: saleLabel,
-                price,
-                oldPrice,
-                accentColor,
-              } satisfies PriceTagProps,
-              { width, height },
-            ),
-            motion: { type: "bounce", start: 0.3, duration: 1.2 },
-          },
-          {
-            type: "animation",
-            source: await fnUrl(
-              "annie",
-              "text-typewriter",
-              {
-                text: ctaText,
-                fontSize: Math.round(width * 0.045),
-                fontColor: "#ffffff",
-                typingFrameCount,
-                blinkingFrameCount,
-                horizontalAlignment: "center",
-                verticalAlignment: "bottom",
-              } satisfies TextTypewriterProps,
-              { width, height },
-            ),
-            delay: ctaTextDelay,
-          },
-        ],
+        width,
+        height,
+        fps: FPS,
       }),
     ],
   });

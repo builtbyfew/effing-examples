@@ -1,4 +1,5 @@
-import type { ChatMessage, ConversationSchedule } from "~/annies/chat-conversation.fn";
+import type { ChatMessage } from "~/chat-ui";
+import type { ConversationSchedule } from "~/annies/chat-conversation.fn";
 
 // Synthesized chat sound effects, pre-mixed into a single WAV and inlined as
 // a data: URL (which the effie schema accepts as an audio source). The effie

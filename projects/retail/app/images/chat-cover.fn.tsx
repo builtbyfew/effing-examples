@@ -2,15 +2,16 @@ import { z } from "zod";
 import { createCanvas, renderReactElement } from "@effing/canvas";
 import type { RunnerArgs, ImageRunnerReturn } from "@effing/fn";
 import { interBold, interSemiBold, loadFonts } from "~/fonts";
-import { ChatChrome } from "~/images/chat-header.fn";
 import {
   Avatar,
   Bubble,
+  ChatChrome,
   IndicatorShell,
   TimestampChip,
   chatMessageSchema,
-  computeLayout,
-} from "~/annies/chat-conversation.fn";
+  computeChatLayout,
+  sampleConversation,
+} from "~/chat-ui";
 
 // A still of the conversation mid-flight — used as the chat-promo cover so
 // the thumbnail reads as a messaging video rather than a product card.
@@ -28,16 +29,7 @@ export type ChatCoverProps = z.infer<typeof propsSchema>;
 
 export const previewProps: ChatCoverProps = {
   contactName: "Sole Mate",
-  messages: [
-    {
-      sender: "contact",
-      imageUrl:
-        "https://static.effing.dev/unsplash/sneakers/max-petrunin-A4fETzh_wlo-unsplash.jpg",
-      text: "The Cloudstep 574 just dropped 👟",
-    },
-    { sender: "user", text: "okay these are gorgeous 😍" },
-    { sender: "user", text: "do they actually feel like clouds?" },
-  ],
+  messages: sampleConversation.slice(0, 3),
   typing: true,
 };
 
@@ -52,7 +44,7 @@ export async function runner({
   bounds: { width, height },
 }: RunnerArgs<ChatCoverProps>): ImageRunnerReturn {
   const fonts = await loadFonts([interBold, interSemiBold]);
-  const layout = computeLayout(width, height);
+  const layout = computeChatLayout(width, height);
   const initial = contactName.charAt(0).toUpperCase();
 
   const canvas = createCanvas(width, height);
@@ -83,7 +75,9 @@ export async function runner({
           overflow: "hidden",
         }}
       >
-        <div style={{ display: "flex", width: "100%", justifyContent: "center" }}>
+        <div
+          style={{ display: "flex", width: "100%", justifyContent: "center" }}
+        >
           <TimestampChip label={timestampLabel} layout={layout} />
         </div>
         {messages.map((msg, i) => {
@@ -92,7 +86,9 @@ export async function runner({
           const nextSameSender =
             i < messages.length - 1 && messages[i + 1].sender === msg.sender;
           // The contact's bubble keeps a grouped corner when typing follows.
-          const isTail = !nextSameSender && !(typing && !isUser && i === messages.length - 1);
+          const isTail =
+            !nextSameSender &&
+            !(typing && !isUser && i === messages.length - 1);
           const top = prevSameSender ? layout.midRadius : layout.bigRadius;
           const bottom = isTail ? layout.tailRadius : layout.midRadius;
 
@@ -156,9 +152,16 @@ export async function runner({
                 flexShrink: 0,
               }}
             >
-              <Avatar initial={initial} layout={layout} accentColor={accentColor} />
+              <Avatar
+                initial={initial}
+                layout={layout}
+                accentColor={accentColor}
+              />
             </div>
-            <IndicatorShell layout={layout} dotOpacities={[0.85, 0.55, 0.35]} />
+            <IndicatorShell
+              layout={layout}
+              dotOpacities={[0.85, 0.55, 0.35]}
+            />
           </div>
         )}
       </div>
