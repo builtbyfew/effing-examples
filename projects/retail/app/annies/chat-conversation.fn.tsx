@@ -115,7 +115,7 @@ const CONTACT_TEXT = "#eae5f6";
 const USER_TEXT = "#ffffff";
 const MUTED_TEXT = "#8d82b5";
 
-type Layout = {
+export type Layout = {
   fontSize: number;
   paddingX: number;
   paddingY: number;
@@ -134,7 +134,7 @@ type Layout = {
   bottomInset: number;
 };
 
-function computeLayout(width: number, height: number): Layout {
+export function computeLayout(width: number, height: number): Layout {
   const min = Math.min(width, height);
   const fontSize = Math.round(min * 0.034);
   const maxBubbleWidth = Math.round(width * 0.64);
@@ -164,7 +164,7 @@ function clamp01(x: number) {
 
 // --- Components (rendered once into sprites, then composited per frame) ------
 
-function Bubble({
+export function Bubble({
   msg,
   layout,
   accentColor,
@@ -221,9 +221,16 @@ function Bubble({
   );
 }
 
-// The indicator pill, sized for three dots; the pulsing dots themselves are
-// drawn directly on the frame canvas so the sprite stays static.
-function IndicatorShell({ layout }: { layout: Layout }) {
+// The indicator pill, sized for three dots. In the annie the pulsing dots
+// are drawn directly on the frame canvas, so the sprite renders them
+// invisible (the default); static consumers pass dotOpacities instead.
+export function IndicatorShell({
+  layout,
+  dotOpacities = [0, 0, 0],
+}: {
+  layout: Layout;
+  dotOpacities?: [number, number, number];
+}) {
   const { dotSize } = layout;
   return (
     <div
@@ -248,6 +255,9 @@ function IndicatorShell({ layout }: { layout: Layout }) {
           style={{
             width: dotSize,
             height: dotSize,
+            borderRadius: dotSize,
+            backgroundColor: CONTACT_TEXT,
+            opacity: dotOpacities[d],
             marginLeft: d > 0 ? Math.round(dotSize * 0.55) : 0,
             display: "block",
           }}
@@ -257,7 +267,7 @@ function IndicatorShell({ layout }: { layout: Layout }) {
   );
 }
 
-function TimestampChip({ label, layout }: { label: string; layout: Layout }) {
+export function TimestampChip({ label, layout }: { label: string; layout: Layout }) {
   return (
     <div
       style={{
@@ -274,7 +284,7 @@ function TimestampChip({ label, layout }: { label: string; layout: Layout }) {
   );
 }
 
-function Avatar({
+export function Avatar({
   initial,
   layout,
   accentColor,

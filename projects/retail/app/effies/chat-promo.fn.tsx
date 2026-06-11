@@ -10,18 +10,13 @@ import { chatSoundEffectsDataUrl, ctaSoundEffectsDataUrl } from "~/sfx";
 import type { ChatConversationProps } from "~/annies/chat-conversation.fn";
 import type { TextTypewriterProps } from "~/annies/text-typewriter.fn";
 import type { ChatHeaderProps } from "~/images/chat-header.fn";
-import type { PromoHeadlineProps } from "~/images/promo-headline.fn";
+import type { ChatCoverProps } from "~/images/chat-cover.fn";
 import type { PriceTagProps } from "~/images/price-tag.fn";
 
 export const propsSchema = z.object({
   contactName: z.string(),
   messages: z.array(chatMessageSchema).min(1),
   pace: z.number().positive().optional(),
-  // Cover art
-  kicker: z.string(),
-  productName: z.string(),
-  tagline: z.string(),
-  imageUrl: z.string().url(),
   // CTA outro
   saleLabel: z.string(),
   price: z.string(),
@@ -49,11 +44,6 @@ export const previewProps: ChatPromoProps = {
     { sender: "contact", text: "Launch week: $129 with code CLOUD20" },
     { sender: "user", text: "say less — ordering now 🙌" },
   ],
-  kicker: "New drop",
-  productName: "Cloudstep 574",
-  tagline: "Running shoes that float",
-  imageUrl:
-    "https://static.effing.dev/unsplash/sneakers/max-petrunin-A4fETzh_wlo-unsplash.jpg",
   saleLabel: "Launch week",
   price: "$129",
   oldPrice: "$159",
@@ -67,10 +57,6 @@ export async function runner({
     contactName,
     messages,
     pace,
-    kicker,
-    productName,
-    tagline,
-    imageUrl,
     saleLabel,
     price,
     oldPrice,
@@ -95,14 +81,13 @@ export async function runner({
 
   const cover = await fnUrl(
     "image",
-    "promo-headline",
+    "chat-cover",
     {
-      kicker,
-      productName,
-      tagline,
+      contactName,
+      messages: messages.slice(0, 3),
       accentColor,
-      backgroundImageUrl: imageUrl,
-    } satisfies PromoHeadlineProps,
+      typing: true,
+    } satisfies ChatCoverProps,
     { width, height },
   );
 

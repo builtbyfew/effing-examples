@@ -30,7 +30,33 @@ export async function runner({
   bounds: { width, height },
 }: RunnerArgs<ChatHeaderProps>): ImageRunnerReturn {
   const fonts = await loadFonts([interBold, interSemiBold]);
+  const canvas = createCanvas(width, height);
+  await renderReactElement(
+    canvas.getContext("2d"),
+    <ChatChrome
+      contactName={contactName}
+      accentColor={accentColor}
+      width={width}
+      height={height}
+    />,
+    { fonts },
+  );
+  return canvas.encode("png");
+}
 
+// The full chat surface — gradient background, contact header, input bar —
+// also composed into the chat-cover image.
+export function ChatChrome({
+  contactName,
+  accentColor,
+  width,
+  height,
+}: {
+  contactName: string;
+  accentColor: string;
+  width: number;
+  height: number;
+}) {
   const min = Math.min(width, height);
   const headerH = chatHeaderInset(width, height) - 1;
   const avatarSize = Math.round(min * 0.064);
@@ -44,11 +70,7 @@ export async function runner({
   const inputMargin = Math.round(min * 0.028);
   const sendSize = Math.round(pillH * 0.74);
 
-  const canvas = createCanvas(width, height);
-  const ctx = canvas.getContext("2d");
-
-  await renderReactElement(
-    ctx,
+  return (
     <div
       style={{
         width,
@@ -216,9 +238,6 @@ export async function runner({
           </div>
         </div>
       </div>
-    </div>,
-    { fonts },
+    </div>
   );
-
-  return canvas.encode("png");
 }
