@@ -61,8 +61,10 @@ export async function* runner({
     typingFrameCount = text.length * 3;
   }
 
-  // Typing phase
-  yield* tween(typingFrameCount, async ({ lower: p }) => {
+  // Typing phase. Sampling at the frame's end (`upper`) makes the final
+  // frame reach exactly 1.0, so the whole text is shown by the end of the
+  // phase — `lower` never reaches 1 and would leave characters pending.
+  yield* tween(typingFrameCount, async ({ upper: p }) => {
     const charsShown = Math.floor(p * text.length);
     const textToShow = text.slice(0, charsShown);
     const canvas = createCanvas(width, height);
