@@ -1,13 +1,28 @@
 import { z } from "zod";
-import { interBold, loadFonts } from "~/fonts";
+import { interBold, openSansSemiBold, robotoBold, loadFonts } from "~/fonts";
+import type { Font } from "~/fonts";
 import { tween } from "@effing/tween";
 import { createCanvas, renderReactElement } from "@effing/canvas";
 import type { RunnerArgs, AnnieRunnerReturn } from "@effing/fn";
 
+const fontFamilySchema = z.enum(["Inter", "Roboto", "Open Sans"]);
+
+// The loaded font and CSS weight for each allowed family — the renderer
+// matches fonts by family/weight/style, so the weight set on the text must
+// be the weight that was loaded (our Open Sans is 600, not bold).
+const fontsByFamily: Record<
+  z.infer<typeof fontFamilySchema>,
+  { font: Font; fontWeight: number }
+> = {
+  Inter: { font: interBold, fontWeight: 700 },
+  Roboto: { font: robotoBold, fontWeight: 700 },
+  "Open Sans": { font: openSansSemiBold, fontWeight: 600 },
+};
+
 export const propsSchema = z.object({
   text: z.string(),
   fontSize: z.number().int().min(1),
-  fontFamily: z.enum(["Inter", "Roboto", "Open Sans"]).optional(),
+  fontFamily: fontFamilySchema.optional(),
   fontColor: z.string().optional(),
   typingFrameCount: z.number().int().min(10).optional(),
   blinkingFrameCount: z.number().int().min(0).optional(),
@@ -39,7 +54,8 @@ export async function* runner({
   },
   bounds: { width, height },
 }: RunnerArgs<TextTypewriterProps>): AnnieRunnerReturn {
-  const fonts = await loadFonts([interBold]);
+  const { font, fontWeight } = fontsByFamily[fontFamily];
+  const fonts = await loadFonts([font]);
 
   if (!typingFrameCount) {
     typingFrameCount = text.length * 3;
@@ -57,6 +73,7 @@ export async function* runner({
         text={textToShow}
         fontSize={fontSize}
         fontFamily={fontFamily}
+        fontWeight={fontWeight}
         fontColor={fontColor}
         horizontalAlignment={horizontalAlignment}
         verticalAlignment={verticalAlignment}
@@ -78,6 +95,7 @@ export async function* runner({
         text={text}
         fontSize={fontSize}
         fontFamily={fontFamily}
+        fontWeight={fontWeight}
         fontColor={fontColor}
         horizontalAlignment={horizontalAlignment}
         verticalAlignment={verticalAlignment}
@@ -92,6 +110,7 @@ export async function* runner({
 export function TextTypewriterOverlay({
   text,
   fontFamily = "Inter",
+  fontWeight = 700,
   fontSize,
   fontColor = "#ffffff",
   horizontalAlignment = "center",
@@ -100,6 +119,7 @@ export function TextTypewriterOverlay({
 }: {
   text: string;
   fontFamily?: string;
+  fontWeight?: number;
   fontSize: number;
   fontColor?: string;
   horizontalAlignment?: "left" | "center" | "right";
@@ -130,7 +150,7 @@ export function TextTypewriterOverlay({
         style={{
           fontFamily,
           fontSize: fontSize,
-          fontWeight: "bold",
+          fontWeight,
           color: fontColor,
           display: "flex",
           flexDirection: "row",
