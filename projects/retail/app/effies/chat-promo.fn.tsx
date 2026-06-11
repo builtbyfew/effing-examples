@@ -33,7 +33,7 @@ export const propsSchema = z.object({
 type ChatPromoProps = z.infer<typeof propsSchema>;
 
 export const previewProps: ChatPromoProps = {
-  contactName: "Cloudstep Sole Support",
+  contactName: "Sole Mate",
   messages: [
     {
       sender: "contact",
