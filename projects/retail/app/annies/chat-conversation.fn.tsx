@@ -129,6 +129,7 @@ type Layout = {
   bigRadius: number;
   midRadius: number;
   tailRadius: number;
+  dotSize: number;
   topInset: number;
   bottomInset: number;
 };
@@ -151,6 +152,7 @@ function computeLayout(width: number, height: number): Layout {
     bigRadius: Math.round(fontSize * 1.25),
     midRadius: Math.round(fontSize * 0.45),
     tailRadius: Math.round(fontSize * 0.26),
+    dotSize: Math.round(fontSize * 0.34),
     topInset: chatHeaderInset(width, height),
     bottomInset: chatInputInset(width, height),
   };
@@ -160,7 +162,7 @@ function clamp01(x: number) {
   return Math.max(0, Math.min(1, x));
 }
 
-// --- Components ---------------------------------------------------------------
+// --- Components (rendered once into sprites, then composited per frame) ------
 
 function Bubble({
   msg,
@@ -219,16 +221,10 @@ function Bubble({
   );
 }
 
-function TypingDots({
-  layout,
-  frame,
-  typeStart,
-}: {
-  layout: Layout;
-  frame: number;
-  typeStart: number;
-}) {
-  const dotSize = Math.round(layout.fontSize * 0.34);
+// The indicator pill, sized for three dots; the pulsing dots themselves are
+// drawn directly on the frame canvas so the sprite stays static.
+function IndicatorShell({ layout }: { layout: Layout }) {
+  const { dotSize } = layout;
   return (
     <div
       style={{
@@ -252,13 +248,7 @@ function TypingDots({
           style={{
             width: dotSize,
             height: dotSize,
-            borderRadius: dotSize,
-            backgroundColor: CONTACT_TEXT,
             marginLeft: d > 0 ? Math.round(dotSize * 0.55) : 0,
-            opacity:
-              0.3 +
-              0.55 *
-                (0.5 + 0.5 * Math.sin((frame - typeStart - d * 5) * 0.45)),
             display: "block",
           }}
         />
@@ -267,13 +257,7 @@ function TypingDots({
   );
 }
 
-function TimestampChip({
-  label,
-  layout,
-}: {
-  label: string;
-  layout: Layout;
-}) {
+function TimestampChip({ label, layout }: { label: string; layout: Layout }) {
   return (
     <div
       style={{
@@ -290,25 +274,80 @@ function TimestampChip({
   );
 }
 
-// --- Measurement --------------------------------------------------------------
+function Avatar({
+  initial,
+  layout,
+  accentColor,
+}: {
+  initial: string;
+  layout: Layout;
+  accentColor: string;
+}) {
+  return (
+    <div
+      style={{
+        width: layout.avatarSize,
+        height: layout.avatarSize,
+        borderRadius: layout.avatarSize,
+        backgroundImage: `linear-gradient(to bottom, ${accentColor}, #4f3a8f)`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: "Inter",
+        fontWeight: 700,
+        fontSize: Math.round(layout.avatarSize * 0.44),
+        color: "#ffffff",
+      }}
+    >
+      {initial}
+    </div>
+  );
+}
+
+function ReceiptLabel({ layout }: { layout: Layout }) {
+  return (
+    <div
+      style={{
+        fontFamily: "Inter",
+        fontWeight: 600,
+        fontSize: Math.round(layout.fontSize * 0.72),
+        color: MUTED_TEXT,
+      }}
+    >
+      Read
+    </div>
+  );
+}
+
+// --- Sprites ------------------------------------------------------------------
+
+type Canvas = ReturnType<typeof createCanvas>;
+
+type Sprite = {
+  canvas: Canvas;
+  width: number;
+  height: number;
+};
 
 /**
- * Render an element once on a scratch canvas and scan the alpha channel to
- * find its exact content height — no line-count heuristics.
+ * Render an element once and crop it to its exact content bounds (alpha
+ * scan) — pixel-accurate sizes with no line-count heuristics, and the
+ * expensive JSX layout, image resampling, and emoji fetches happen once
+ * instead of once per frame.
  */
-async function measureContentHeight(
+async function renderSprite(
   element: React.ReactElement,
-  width: number,
+  maxWidth: number,
   maxHeight: number,
   fonts: FontData[],
-): Promise<number> {
-  const canvas = createCanvas(width, maxHeight);
-  const ctx = canvas.getContext("2d");
+): Promise<Sprite> {
+  const scratch = createCanvas(maxWidth, maxHeight);
+  const ctx = scratch.getContext("2d");
   await renderReactElement(
     ctx,
     <div
       style={{
-        width,
+        width: maxWidth,
         height: maxHeight,
         display: "flex",
         flexDirection: "column",
@@ -319,17 +358,28 @@ async function measureContentHeight(
     </div>,
     { fonts },
   );
-  const { data } = ctx.getImageData(0, 0, width, maxHeight);
-  for (let y = maxHeight - 1; y >= 0; y--) {
-    const row = y * width * 4;
-    for (let x = 3; x < width * 4; x += 16) {
-      if (data[row + x] > 8) return y + 1;
+
+  const { data } = ctx.getImageData(0, 0, maxWidth, maxHeight);
+  let width = 0;
+  let height = 0;
+  for (let y = 0; y < maxHeight; y++) {
+    const row = y * maxWidth * 4;
+    for (let x = 0; x < maxWidth; x++) {
+      if (data[row + x * 4 + 3] > 8) {
+        if (y >= height) height = y + 1;
+        if (x >= width) width = x + 1;
+      }
     }
   }
-  return 0;
+  width = Math.max(width, 1);
+  height = Math.max(height, 1);
+
+  const canvas = createCanvas(width, height);
+  canvas.getContext("2d").drawImage(scratch, 0, 0, width, height, 0, 0, width, height);
+  return { canvas, width, height };
 }
 
-function measureBound(msg: ChatMessage, layout: Layout): number {
+function bubbleBound(msg: ChatMessage, layout: Layout): number {
   const textLines = msg.text
     ? Math.ceil(msg.text.length / 8) + 2 // generous upper bound, exact comes from the scan
     : 0;
@@ -363,39 +413,66 @@ export async function* runner({
     holdFrames,
   );
 
-  const genericRadii: [number, number, number, number] = [
-    layout.bigRadius,
-    layout.bigRadius,
-    layout.bigRadius,
-    layout.bigRadius,
-  ];
-  const bubbleHeights = await Promise.all(
-    messages.map((msg) =>
-      measureContentHeight(
-        <Bubble
-          msg={msg}
-          layout={layout}
-          accentColor={accentColor}
-          radii={genericRadii}
-        />,
-        layout.maxBubbleWidth,
-        measureBound(msg, layout),
-        fonts,
-      ),
-    ),
+  // Pre-render every element once. Each message gets two variants — bottom
+  // corner as tail vs. grouped — since the tail hops to the newest bubble of
+  // a same-sender run as the conversation grows.
+  const bubbles = await Promise.all(
+    messages.map(async (msg, i) => {
+      const isUser = msg.sender === "user";
+      const prevSameSender = i > 0 && messages[i - 1].sender === msg.sender;
+      const top = prevSameSender ? layout.midRadius : layout.bigRadius;
+      const variant = (bottom: number): [number, number, number, number] =>
+        isUser
+          ? [layout.bigRadius, top, bottom, layout.bigRadius]
+          : [top, layout.bigRadius, layout.bigRadius, bottom];
+      const bound = bubbleBound(msg, layout);
+      const [tail, grouped] = await Promise.all([
+        renderSprite(
+          <Bubble msg={msg} layout={layout} accentColor={accentColor} radii={variant(layout.tailRadius)} />,
+          layout.maxBubbleWidth,
+          bound,
+          fonts,
+        ),
+        renderSprite(
+          <Bubble msg={msg} layout={layout} accentColor={accentColor} radii={variant(layout.midRadius)} />,
+          layout.maxBubbleWidth,
+          bound,
+          fonts,
+        ),
+      ]);
+      return { tail, grouped };
+    }),
   );
-  const indicatorHeight = await measureContentHeight(
-    <TypingDots layout={layout} frame={0} typeStart={0} />,
+  const indicator = await renderSprite(
+    <IndicatorShell layout={layout} />,
     layout.maxBubbleWidth,
     Math.round(layout.fontSize * 5),
     fonts,
   );
-  const chipHeight = await measureContentHeight(
+  const chip = await renderSprite(
     <TimestampChip label={timestampLabel} layout={layout} />,
     layout.maxBubbleWidth,
     Math.round(layout.fontSize * 4),
     fonts,
   );
+  const avatar = await renderSprite(
+    <Avatar
+      initial={contactName?.charAt(0).toUpperCase() ?? ""}
+      layout={layout}
+      accentColor={accentColor}
+    />,
+    layout.avatarSize + 8,
+    layout.avatarSize + 8,
+    fonts,
+  );
+  const receipt = receiptFrame
+    ? await renderSprite(
+        <ReceiptLabel layout={layout} />,
+        layout.maxBubbleWidth,
+        Math.round(layout.fontSize * 3),
+        fonts,
+      )
+    : undefined;
 
   // Gap between message i-1 and i — tighter inside a same-sender run.
   const gapBefore = messages.map((msg, i) =>
@@ -421,37 +498,63 @@ export async function* runner({
         clamp01((frame - typeStart) / SLIDE_FRAMES),
       );
       return (
-        (indicatorHeight + gapBefore[j]) * slideTyp +
-        (bubbleHeights[j] - indicatorHeight) * slidePop
+        (indicator.height + gapBefore[j]) * slideTyp +
+        (bubbles[j].tail.height - indicator.height) * slidePop
       );
     }
-    return (bubbleHeights[j] + gapBefore[j]) * slidePop;
+    return (bubbles[j].tail.height + gapBefore[j]) * slidePop;
   }
 
   yield* tween(totalFrameCount, async (_interval, frame) => {
-    const rows: React.ReactNode[] = [];
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext("2d");
+
+    if (backgroundColor) {
+      ctx.fillStyle = backgroundColor;
+      ctx.fillRect(0, 0, width, height);
+    }
+
+    // Messages scroll between the header and the input bar.
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, layout.topInset, width, height - layout.topInset - layout.bottomInset);
+    ctx.clip();
+
     const shiftAbove = (i: number) => {
       let total = 0;
       for (let j = i + 1; j < messages.length; j++) total += shiftOf(j, frame);
       return total;
     };
 
+    // Draw a sprite with opacity and a pop-in scale anchored at (originX, bottomY).
+    const drawSprite = (
+      sprite: Sprite,
+      x: number,
+      y: number,
+      opacity: number,
+      scale: number,
+      originX: number,
+    ) => {
+      ctx.save();
+      ctx.globalAlpha = opacity;
+      if (scale !== 1) {
+        const originY = y + sprite.height;
+        ctx.translate(originX, originY);
+        ctx.scale(scale, scale);
+        ctx.translate(-originX, -originY);
+      }
+      ctx.drawImage(sprite.canvas, x, y);
+      ctx.restore();
+    };
+
     // Timestamp chip scrolls along above the first message.
-    const chipY = stackBottom - chipHeight - shiftAbove(-1);
-    rows.push(
-      <div
-        key="chip"
-        style={{
-          position: "absolute",
-          top: chipY - layout.topInset,
-          left: layout.outerMargin,
-          width: width - 2 * layout.outerMargin,
-          display: "flex",
-          justifyContent: "center",
-        }}
-      >
-        <TimestampChip label={timestampLabel} layout={layout} />
-      </div>,
+    drawSprite(
+      chip,
+      Math.round((width - chip.width) / 2),
+      stackBottom - chip.height - shiftAbove(-1),
+      1,
+      1,
+      0,
     );
 
     messages.forEach((msg, i) => {
@@ -462,168 +565,90 @@ export async function* runner({
       const entry = clamp01((frame - pop) / ENTRY_FRAMES);
       const opacity = easeOutQuad(clamp01((frame - pop) / 7));
       const scale = 0.55 + 0.45 * easeOutBack(entry);
-      const rise = (1 - easeOutCubic(entry)) * bubbleHeights[i] * 0.25;
-
-      const y = stackBottom - bubbleHeights[i] - shiftAbove(i);
 
       // Tail and avatar live on the last visible bubble of a same-sender run.
       const nextVisibleSameSender =
         i < messages.length - 1 &&
         messages[i + 1].sender === msg.sender &&
         frame >= events[i + 1].pop;
-      const prevSameSender = i > 0 && messages[i - 1].sender === msg.sender;
       const isTail = !nextVisibleSameSender;
+      const sprite = isTail ? bubbles[i].tail : bubbles[i].grouped;
 
-      const senderTop = prevSameSender ? layout.midRadius : layout.bigRadius;
-      const senderBottom = isTail ? layout.tailRadius : layout.midRadius;
-      const radii: [number, number, number, number] = isUser
-        ? [layout.bigRadius, senderTop, senderBottom, layout.bigRadius]
-        : [senderTop, layout.bigRadius, layout.bigRadius, senderBottom];
+      const rise = (1 - easeOutCubic(entry)) * sprite.height * 0.25;
+      const y = stackBottom - sprite.height - shiftAbove(i) + rise;
+      const x = isUser
+        ? width - layout.outerMargin - sprite.width
+        : layout.outerMargin + layout.avatarSize + layout.avatarGap;
+      const originX = isUser ? x + sprite.width : x;
 
-      rows.push(
-        <div
-          key={i}
-          style={{
-            position: "absolute",
-            top: y - layout.topInset,
-            left: layout.outerMargin,
-            width: width - 2 * layout.outerMargin,
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "flex-end",
-            justifyContent: isUser ? "flex-end" : "flex-start",
-            opacity,
-            transform: `translateY(${rise}px) scale(${scale})`,
-            transformOrigin: `${isUser ? "100%" : "0%"} 100%`,
-          }}
-        >
-          {!isUser && (
-            <div
-              style={{
-                width: layout.avatarSize,
-                marginRight: layout.avatarGap,
-                display: "flex",
-                flexShrink: 0,
-              }}
-            >
-              {isTail && (
-                <div
-                  style={{
-                    width: layout.avatarSize,
-                    height: layout.avatarSize,
-                    borderRadius: layout.avatarSize,
-                    backgroundImage: `linear-gradient(to bottom, ${accentColor}, #4f3a8f)`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontFamily: "Inter",
-                    fontWeight: 700,
-                    fontSize: Math.round(layout.avatarSize * 0.44),
-                    color: "#ffffff",
-                  }}
-                >
-                  {contactName?.charAt(0).toUpperCase()}
-                </div>
-              )}
-            </div>
-          )}
-          <Bubble
-            msg={msg}
-            layout={layout}
-            accentColor={accentColor}
-            radii={radii}
-          />
-        </div>,
-      );
+      drawSprite(sprite, x, y, opacity, scale, originX);
+
+      if (!isUser && isTail) {
+        drawSprite(
+          avatar,
+          layout.outerMargin,
+          y + sprite.height - avatar.height,
+          opacity,
+          1,
+          0,
+        );
+      }
 
       // Read receipt under the final user message.
-      if (i === messages.length - 1 && receiptFrame && frame >= receiptFrame) {
-        rows.push(
-          <div
-            key="receipt"
-            style={{
-              position: "absolute",
-              top: y - layout.topInset + bubbleHeights[i] + Math.round(layout.fontSize * 0.35),
-              left: layout.outerMargin,
-              width: width - 2 * layout.outerMargin,
-              display: "flex",
-              justifyContent: "flex-end",
-              opacity: easeOutQuad(clamp01((frame - receiptFrame) / 10)),
-            }}
-          >
-            <div
-              style={{
-                fontFamily: "Inter",
-                fontWeight: 600,
-                fontSize: Math.round(layout.fontSize * 0.72),
-                color: MUTED_TEXT,
-              }}
-            >
-              Read
-            </div>
-          </div>,
+      if (i === messages.length - 1 && receipt && receiptFrame && frame >= receiptFrame) {
+        drawSprite(
+          receipt,
+          width - layout.outerMargin - receipt.width,
+          y + sprite.height + Math.round(layout.fontSize * 0.35),
+          easeOutQuad(clamp01((frame - receiptFrame) / 10)),
+          1,
+          0,
         );
       }
     });
 
     // Typing indicator for the contact message currently being "typed".
     const typingIndex = events.findIndex(
-      (e, i) =>
-        e.typeStart !== undefined &&
-        frame >= e.typeStart &&
-        frame < e.pop &&
-        messages[i].sender === "contact",
+      (e) => e.typeStart !== undefined && frame >= e.typeStart && frame < e.pop,
     );
     if (typingIndex >= 0) {
-      const { typeStart } = events[typingIndex];
-      const entry = clamp01((frame - typeStart!) / ENTRY_FRAMES);
-      rows.push(
-        <div
-          key="typing"
-          style={{
-            position: "absolute",
-            top: stackBottom - indicatorHeight - layout.topInset,
-            left: layout.outerMargin + layout.avatarSize + layout.avatarGap,
-            display: "flex",
-            opacity: easeOutQuad(entry),
-            transform: `scale(${0.55 + 0.45 * easeOutBack(entry)})`,
-            transformOrigin: "0% 100%",
-          }}
-        >
-          <TypingDots layout={layout} frame={frame} typeStart={typeStart!} />
-        </div>,
+      const typeStart = events[typingIndex].typeStart!;
+      const entry = clamp01((frame - typeStart) / ENTRY_FRAMES);
+      const x = layout.outerMargin + layout.avatarSize + layout.avatarGap;
+      const y = stackBottom - indicator.height;
+      drawSprite(
+        indicator,
+        x,
+        y,
+        easeOutQuad(entry),
+        0.55 + 0.45 * easeOutBack(entry),
+        x,
       );
+
+      // Pulsing dots, drawn over the pre-rendered pill.
+      const { dotSize } = layout;
+      const dotStep = dotSize + Math.round(dotSize * 0.55);
+      const centerY = y + indicator.height / 2;
+      ctx.save();
+      ctx.fillStyle = CONTACT_TEXT;
+      for (let d = 0; d < 3; d++) {
+        ctx.globalAlpha =
+          0.3 +
+          0.55 * (0.5 + 0.5 * Math.sin((frame - typeStart - d * 5) * 0.45));
+        ctx.beginPath();
+        ctx.arc(
+          x + layout.paddingX + dotSize / 2 + d * dotStep,
+          centerY,
+          dotSize / 2,
+          0,
+          2 * Math.PI,
+        );
+        ctx.fill();
+      }
+      ctx.restore();
     }
 
-    const canvas = createCanvas(width, height);
-    await renderReactElement(
-      canvas.getContext("2d"),
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width,
-          height,
-          backgroundColor,
-        }}
-      >
-        {/* Messages scroll between the header and the input bar. */}
-        <div
-          style={{
-            position: "absolute",
-            top: layout.topInset,
-            left: 0,
-            width,
-            height: height - layout.topInset - layout.bottomInset,
-            overflow: "hidden",
-          }}
-        >
-          {rows}
-        </div>
-      </div>,
-      { fonts },
-    );
+    ctx.restore();
     return canvas.encode("png");
   });
 }
