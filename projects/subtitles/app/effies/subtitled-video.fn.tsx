@@ -41,6 +41,11 @@ export const propsSchema = z.object({
   cues: z.array(cueSchema).min(1),
   /** Keep the video's own audio track. Defaults to true. */
   keepAudio: z.boolean().optional(),
+  /**
+   * Fade the ending to black (and the audio out) over this many seconds —
+   * useful when `videoDuration` cuts the video short. Defaults to 0 (off).
+   */
+  endFadeOut: z.number().min(0).optional(),
   fontSize: z.number().int().min(1).optional(),
   textColor: z.string().optional(),
   outlineColor: z.string().optional(),
@@ -62,6 +67,7 @@ export const previewProps: SubtitledVideoProps = {
   videoUrl:
     "https://images-assets.nasa.gov/video/jsc2019m000363_We_Chose_The_Inspiration_of_Apollo_mp4_1_720/jsc2019m000363_We_Chose_The_Inspiration_of_Apollo_mp4_1_720~medium.mp4",
   videoDuration: 10,
+  endFadeOut: 0.8,
   cues: [
     {
       text: "The exploration of space",
@@ -170,6 +176,7 @@ export async function runner({
     videoDuration,
     cues,
     keepAudio = true,
+    endFadeOut = 0,
     fontSize,
     textColor,
     outlineColor,
@@ -212,7 +219,12 @@ export async function runner({
         duration: videoDuration,
         // A video background brings only pixels — its soundtrack has to be
         // mixed back in as segment audio.
-        audio: keepAudio ? { source: effieWebUrl(videoUrl) } : undefined,
+        audio: keepAudio
+          ? {
+              source: effieWebUrl(videoUrl),
+              fadeOut: endFadeOut > 0 ? endFadeOut : undefined,
+            }
+          : undefined,
         layers: await Promise.all(
           cues.map(async (cue) => ({
             type: "animation" as const,
@@ -240,6 +252,18 @@ export async function runner({
           })),
         ),
       }),
+      // A black segment crossfaded over the video's tail, so a mid-footage
+      // cut ends on a deliberate fade instead of a hard stop.
+      ...(endFadeOut > 0
+        ? [
+            effieSegment({
+              duration: endFadeOut,
+              transition: { type: "fade" as const, duration: endFadeOut },
+              background: { type: "color" as const, color: "#000000" },
+              layers: [],
+            }),
+          ]
+        : []),
     ],
   });
 }
