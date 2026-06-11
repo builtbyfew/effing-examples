@@ -6,9 +6,8 @@ export default defineConfig({
   annies: "app/annies/*.fn.tsx",
   effies: "app/effies/*.fn.tsx",
   dev: {
-    host: "127.0.0.1",
-    port: 3839, // 3839 = 0xEFF, how effing cool is that? ʘ‿ʘ
-    ffs: true, // auto-start FFS sidecar (when installed)
+    // Other dev options (host, port, ffs) use their defaults; the scenes in
+    // this project are designed for 4:5 and 9:16 only.
     resolutions: [
       { width: 1080, height: 1350, label: "4:5" },
       { width: 1080, height: 1920, label: "9:16" },

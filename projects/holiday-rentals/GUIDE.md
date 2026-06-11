@@ -14,7 +14,7 @@ Open [http://localhost:3839](http://localhost:3839) — the homepage lists every
 
 ## Path alias
 
-This project is configured with a `~/*` path alias pointing at `app/*` (see `tsconfig.json`). Import project files via `~/fonts`, `~/components/stay-card`, `~/annies/ken-burns.fn`, etc., rather than long relative paths.
+This project is configured with a `~/*` path alias pointing at `app/*` (see `tsconfig.json`). Import project files via `~/fonts`, `~/annies/my-animation.fn`, etc., rather than long relative paths.
 
 ## Fonts
 
@@ -23,14 +23,15 @@ This project is configured with a `~/*` path alias pointing at `app/*` (see `tsc
 ```ts
 import {
   loadFonts,
-  dmSerifDisplay,
-  dmSansRegular,
-  dmSansMedium,
-  dmSansBold,
-  caveatBold,
+  interBold,
+  interSemiBold,
+  robotoRegular,
+  robotoBold,
+  openSansRegular,
+  openSansSemiBold,
 } from "~/fonts";
 
-const fonts = await loadFonts([dmSerifDisplay, dmSansMedium]);
+const fonts = await loadFonts([interBold, robotoRegular]);
 ```
 
 To add another font, copy one of the existing exports in `app/fonts.ts` and point it at the relevant `https://fonts.gstatic.com/s/...ttf` URL. Fonts are fetched at runtime — never bundle them, since that limits where your fns can run. See `effing manual` → "Fonts" for the underlying `FontData` shape.
@@ -38,13 +39,14 @@ To add another font, copy one of the existing exports in `app/fonts.ts` and poin
 ## Environment variables
 
 ```bash
-# Required: base URL the dev/prod server is reachable at
-BASE_URL=http://localhost:3839
 # Required: secret for signing URL segments
 SECRET_KEY=your-secret-key
+# Optional in dev (defaults to the dev server's own address); required in production
+BASE_URL=http://localhost:3839
 
-# Optional: FFS rendering service (only when pointing at a remote FFS)
-FFS_BASE_URL=http://localhost:2000
+# Optional: FFS rendering service (only when pointing at a remote FFS —
+# the local sidecar is wired up automatically)
+FFS_BASE_URL=https://your-ffs.example.com
 FFS_API_KEY=your-ffs-api-key
 ```
 
