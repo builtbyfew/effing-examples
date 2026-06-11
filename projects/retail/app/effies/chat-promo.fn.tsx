@@ -162,9 +162,6 @@ export async function runner({
               { width, height },
             ),
             motion: { type: "bounce", start: 0.3, duration: 1.2 },
-            effects: [
-              { type: "fade-out", start: ctaDuration - 0.6, duration: 0.6 },
-            ],
           },
           {
             type: "animation",
@@ -183,13 +180,6 @@ export async function runner({
               { width, height },
             ),
             delay: ctaTextDelay,
-            effects: [
-              {
-                type: "fade-out",
-                start: ctaDuration - ctaTextDelay - 0.6,
-                duration: 0.6,
-              },
-            ],
           },
         ],
       }),
