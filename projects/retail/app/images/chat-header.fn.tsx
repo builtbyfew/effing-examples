@@ -11,7 +11,7 @@ export const propsSchema = z.object({
 export type ChatHeaderProps = z.infer<typeof propsSchema>;
 
 export const previewProps: ChatHeaderProps = {
-  contactName: "Cloudstep",
+  contactName: "Cloudstep Sole Support",
 };
 
 // Vertical chrome insets, shared with the chat-conversation annie so the
