@@ -88,6 +88,34 @@ export function chatSoundEffectsDataUrl(
 }
 
 /**
+ * Soft pops for a staggered list reveal, pitched ascending so the list
+ * audibly "builds up". Offsets follow the feature-list annie's timing: the
+ * layer delay, then one pill per stagger, each popping a beat into its
+ * reveal as it becomes visible.
+ */
+export function listRevealSoundEffectsDataUrl(opts: {
+  durationSec: number;
+  delaySec: number;
+  count: number;
+  staggerFrames: number;
+  revealFrames: number;
+  fps: number;
+}): string {
+  const { durationSec, delaySec, count, staggerFrames, revealFrames, fps } =
+    opts;
+  const samples = new Float32Array(Math.ceil(durationSec * SAMPLE_RATE));
+
+  for (let i = 0; i < count; i++) {
+    const at = delaySec + (i * staggerFrames + revealFrames * 0.3) / fps;
+    const base = 520 + i * 70;
+    addBlip(samples, at, 0.09, base, base * 1.3, 0.22);
+    addBlip(samples, at, 0.05, base * 2, base * 2.4, 0.07);
+  }
+
+  return toWavDataUrl(samples);
+}
+
+/**
  * Effects for the CTA outro: a thud when the price card's bounce starts
  * (with a softer rebound), keyboard ticks in step with the typewriter
  * (one character per 3 frames), and a typewriter-bell ding at the end of

@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { effieData, effieSegment, effieWebUrl } from "@effing/effie";
-import { ctaSoundEffectsDataUrl } from "~/sfx";
+import {
+  ctaSoundEffectsDataUrl,
+  listRevealSoundEffectsDataUrl,
+} from "~/sfx";
 import { fnUrl } from "@effing/fn";
 import type { RunnerArgs, EffieRunnerReturn } from "@effing/fn";
 import type { PhotoZoomProps } from "~/annies/photo-zoom.fn";
@@ -142,6 +145,21 @@ export async function runner({
       effieSegment({
         duration: featuresDuration,
         transition: { type: "smooth", direction: "left", duration: 0.8 },
+        audio: soundEffects
+          ? {
+              source: effieWebUrl(
+                listRevealSoundEffectsDataUrl({
+                  durationSec: featuresDuration,
+                  delaySec: featureListDelay,
+                  count: features.length,
+                  staggerFrames,
+                  revealFrames,
+                  fps: FPS,
+                }),
+              ),
+              volume: 0.8,
+            }
+          : undefined,
         layers: [
           {
             type: "animation",
