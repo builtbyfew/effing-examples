@@ -135,6 +135,7 @@ export async function runner({
               "chat-conversation",
               {
                 messages,
+                contactName,
                 accentColor,
                 pace,
               } satisfies ChatConversationProps,

@@ -16,6 +16,8 @@ export type ChatMessage = z.infer<typeof chatMessageSchema>;
 
 export const propsSchema = z.object({
   messages: z.array(chatMessageSchema).min(1),
+  // Shown as an initial in the avatar next to contact messages.
+  contactName: z.string().optional(),
   timestampLabel: z.string().optional(),
   accentColor: z.string().optional(),
   // Multiplies typing and reading pauses; > 1 slows the conversation down.
@@ -42,6 +44,7 @@ export const previewProps: ChatConversationProps = {
     { sender: "contact", text: "Launch week: $129 with code CLOUD20" },
     { sender: "user", text: "say less — ordering now 🙌" },
   ],
+  contactName: "Sole Mate",
   backgroundColor: "#16101f",
 };
 
@@ -343,6 +346,7 @@ function measureBound(msg: ChatMessage, layout: Layout): number {
 export async function* runner({
   props: {
     messages,
+    contactName,
     timestampLabel = "Today 9:41",
     accentColor = "#7c5cd6",
     pace = 1,
@@ -509,8 +513,17 @@ export async function* runner({
                     height: layout.avatarSize,
                     borderRadius: layout.avatarSize,
                     backgroundImage: `linear-gradient(to bottom, ${accentColor}, #4f3a8f)`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontFamily: "Inter",
+                    fontWeight: 700,
+                    fontSize: Math.round(layout.avatarSize * 0.44),
+                    color: "#ffffff",
                   }}
-                />
+                >
+                  {contactName?.charAt(0).toUpperCase()}
+                </div>
               )}
             </div>
           )}
