@@ -4,9 +4,11 @@ TikTok-style word-by-word subtitles on top of any video, driven entirely by prop
 
 ## Fns
 
-- **`subtitled-video`** (effie) — takes a `videoUrl`, its `videoDuration`, and a list of `cues` (`{ text, start, end }`); plays the video as the background (keeping its audio) and overlays one subtitle layer per cue. Word highlight timings are spread across each cue proportional to word length, or can be given exactly via `cues[].words` (e.g. from a Whisper transcript). Colors, font size, and vertical position are configurable via props.
-- **`subtitle-cue`** (annie) — one caption phrase as transparent PNG frames: chunky uppercase words with a thick outline, the currently spoken word popped onto a colored highlight pill.
-- **`subtitle-cover`** (image) — cover still reusing the caption styling on a gradient background.
+- **`subtitled-video`** (effie) — takes a `videoUrl`, the seconds of it to play (`videoDuration`), and a list of `cues` (`{ text, start, end }`); plays the video as the background (keeping its audio) and overlays one subtitle layer per cue. Word highlight timings are spread across each cue proportional to word length, or can be given exactly via `cues[].words` (e.g. from a Whisper transcript). An optional `endFadeOut` fades the picture and audio to black when `videoDuration` cuts the video short.
+- **`subtitle-cue`** (annie) — one caption phrase as transparent PNG frames, popping the word currently being spoken onto its highlight pill.
+- **`subtitle-cover`** (image) — cover still: the caption look frozen on its last word, on a gradient derived from the highlight color.
+
+The look itself — style props with their defaults and the `CaptionOverlay` component — lives in [`app/captions.tsx`](./app/captions.tsx), shared by all three fns. Restyle via props (`highlightColor`, `fontSize`, `verticalPosition`, …) without touching code.
 
 The preview props caption the opening of NASA's public-domain ["We Chose: The Inspiration of Apollo"](https://images.nasa.gov/details/jsc2019m000363_We_Chose_The_Inspiration_of_Apollo_mp4_1_720) clip — JFK's 1962 Rice University speech — with word timings taken from a Whisper transcription, so the karaoke highlight tracks the actual voice.
 

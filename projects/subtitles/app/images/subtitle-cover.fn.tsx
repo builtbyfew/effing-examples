@@ -1,20 +1,20 @@
 import { z } from "zod";
 import { createCanvas, renderReactElement } from "@effing/canvas";
 import type { RunnerArgs, ImageRunnerReturn } from "@effing/fn";
-import { SubtitleCueOverlay } from "~/annies/subtitle-cue.fn";
-import { interBlack, loadFonts } from "~/fonts";
+import {
+  CaptionOverlay,
+  captionStyleSchema,
+  loadCaptionFonts,
+  resolveCaptionStyle,
+} from "~/captions";
 
-// Cover still for the subtitled video: the caption styling from the
-// subtitle-cue annie frozen mid-highlight on a dark gradient, so the
+// Cover still for the subtitled video: the caption look frozen on its last
+// word, centered on a gradient derived from the highlight color, so the
 // thumbnail reads as "this video has captions".
 
 export const propsSchema = z.object({
   text: z.string().min(1),
-  fontSize: z.number().int().min(1).optional(),
-  textColor: z.string().optional(),
-  outlineColor: z.string().optional(),
-  highlightColor: z.string().optional(),
-  highlightTextColor: z.string().optional(),
+  ...captionStyleSchema.shape,
 });
 
 export type SubtitleCoverProps = z.infer<typeof propsSchema>;
@@ -36,24 +36,15 @@ function shade(hex: string, factor: number): string {
 }
 
 export async function runner({
-  props: {
-    text,
-    fontSize = 96,
-    textColor = "#ffffff",
-    outlineColor = "#000000",
-    highlightColor = "#5b2fd6",
-    highlightTextColor = "#ffffff",
-  },
+  props,
   bounds: { width, height },
 }: RunnerArgs<SubtitleCoverProps>): ImageRunnerReturn {
-  const fonts = await loadFonts([interBlack]);
-
-  // Fake per-word timings so the overlay highlights the last word: each word
-  // "starts" at its index, and we render at t = words.length.
-  const words = text
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((word, i) => ({ text: word, start: i, end: i + 1 }));
+  const style = resolveCaptionStyle(props, {
+    fontSize: 96,
+    verticalPosition: 0.5,
+  });
+  const fonts = await loadCaptionFonts();
+  const words = props.text.split(/\s+/).filter(Boolean);
 
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
@@ -64,18 +55,13 @@ export async function runner({
         width,
         height,
         display: "flex",
-        backgroundImage: `linear-gradient(160deg, ${shade(highlightColor, 0.2)}, ${shade(highlightColor, 0.45)}, ${shade(highlightColor, 0.14)})`,
+        backgroundImage: `linear-gradient(160deg, ${shade(style.highlightColor, 0.2)}, ${shade(style.highlightColor, 0.45)}, ${shade(style.highlightColor, 0.14)})`,
       }}
     >
-      <SubtitleCueOverlay
+      <CaptionOverlay
         words={words}
-        t={words.length}
-        fontSize={fontSize}
-        textColor={textColor}
-        outlineColor={outlineColor}
-        highlightColor={highlightColor}
-        highlightTextColor={highlightTextColor}
-        verticalPosition={0.5}
+        activeIndex={words.length - 1}
+        style={style}
         width={width}
         height={height}
       />

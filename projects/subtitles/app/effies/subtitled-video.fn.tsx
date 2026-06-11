@@ -3,6 +3,7 @@ import invariant from "tiny-invariant";
 import { effieData, effieSegment, effieWebUrl } from "@effing/effie";
 import { fnUrl } from "@effing/fn";
 import type { RunnerArgs, EffieRunnerReturn } from "@effing/fn";
+import { captionStyleSchema } from "~/captions";
 import type { SubtitleCueProps } from "~/annies/subtitle-cue.fn";
 import type { SubtitleCoverProps } from "~/images/subtitle-cover.fn";
 
@@ -46,15 +47,9 @@ export const propsSchema = z.object({
    * useful when `videoDuration` cuts the video short. Defaults to 0 (off).
    */
   endFadeOut: z.number().min(0).optional(),
-  fontSize: z.number().int().min(1).optional(),
-  textColor: z.string().optional(),
-  outlineColor: z.string().optional(),
-  highlightColor: z.string().optional(),
-  highlightTextColor: z.string().optional(),
-  /** Vertical center of the caption block, as a fraction of frame height. */
-  verticalPosition: z.number().min(0).max(1).optional(),
   /** Cover image text; defaults to the first cue's text. */
   coverText: z.string().optional(),
+  ...captionStyleSchema.shape,
 });
 
 type SubtitledVideoProps = z.infer<typeof propsSchema>;
@@ -149,7 +144,7 @@ type CueWord = z.infer<typeof timedWordSchema>;
  * shifted; otherwise the cue window is split across the words of `text`,
  * proportional to word length (longer words take longer to say).
  */
-function cueWords(cue: z.infer<typeof cueSchema>): CueWord[] {
+function cueWordTimings(cue: z.infer<typeof cueSchema>): CueWord[] {
   const duration = cue.end - cue.start;
   if (cue.words) {
     return cue.words.map((word) => ({
@@ -178,13 +173,8 @@ export async function runner({
     cues,
     keepAudio = true,
     endFadeOut = 0,
-    fontSize,
-    textColor,
-    outlineColor,
-    highlightColor,
-    highlightTextColor,
-    verticalPosition,
     coverText,
+    ...captionStyle
   },
   bounds: { width, height },
 }: RunnerArgs<SubtitledVideoProps>): EffieRunnerReturn {
@@ -201,10 +191,7 @@ export async function runner({
     "subtitle-cover",
     {
       text: coverText ?? cues[0]!.text,
-      textColor,
-      outlineColor,
-      highlightColor,
-      highlightTextColor,
+      ...captionStyle,
     } satisfies SubtitleCoverProps,
     { width, height },
   );
@@ -233,18 +220,13 @@ export async function runner({
               "annie",
               "subtitle-cue",
               {
-                words: cueWords(cue),
+                words: cueWordTimings(cue),
                 fps: FPS,
                 frameCount: Math.max(
                   1,
                   Math.round((cue.end - cue.start) * FPS),
                 ),
-                fontSize,
-                textColor,
-                outlineColor,
-                highlightColor,
-                highlightTextColor,
-                verticalPosition,
+                ...captionStyle,
               } satisfies SubtitleCueProps,
               { width, height },
             ),
