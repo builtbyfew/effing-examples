@@ -66,8 +66,9 @@ type SubtitledVideoProps = z.infer<typeof propsSchema>;
 export const previewProps: SubtitledVideoProps = {
   videoUrl:
     "https://images-assets.nasa.gov/video/jsc2019m000363_We_Chose_The_Inspiration_of_Apollo_mp4_1_720/jsc2019m000363_We_Chose_The_Inspiration_of_Apollo_mp4_1_720~medium.mp4",
-  videoDuration: 10,
-  endFadeOut: 0.8,
+  videoDuration: 11,
+  endFadeOut: 1,
+  highlightColor: "#00c853",
   cues: [
     {
       text: "The exploration of space",
