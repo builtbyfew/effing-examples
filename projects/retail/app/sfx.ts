@@ -111,9 +111,21 @@ export function ctaSoundEffectsDataUrl(opts: {
   } = opts;
   const samples = new Float32Array(Math.ceil(durationSec * SAMPLE_RATE));
 
-  addBlip(samples, bounceStartSec, 0.16, 150, 65, 0.5);
-  addBlip(samples, bounceStartSec, 0.12, 260, 120, 0.2);
-  addBlip(samples, bounceStartSec + bounceDurationSec * 0.5, 0.12, 130, 70, 0.18);
+  // The bounce motion drops the card from above with a Penner
+  // ease-out-bounce, so it contacts its resting spot at these fractions of
+  // the motion (rebounding 25%, 6.25%, then 1.5% of the height) — the thuds
+  // belong on the impacts, not at motion start.
+  const impacts: Array<[fraction: number, energy: number]> = [
+    [0.363636, 1],
+    [0.727273, 0.5],
+    [0.909091, 0.25],
+    [0.954545, 0.12],
+  ];
+  for (const [fraction, energy] of impacts) {
+    const at = bounceStartSec + fraction * bounceDurationSec;
+    addBlip(samples, at, 0.06 + 0.08 * energy, 160, 60, 0.5 * energy);
+    addBlip(samples, at, 0.04 + 0.06 * energy, 280, 120, 0.2 * energy);
+  }
 
   for (let f = 0; f < typingFrameCount; f += 3) {
     const wobble = (f / 3) % 2 === 0 ? 1900 : 1750;
