@@ -2,11 +2,11 @@ import { z } from "zod";
 import type { FontData } from "@effing/canvas";
 import { interBlack, loadFonts } from "~/fonts";
 
-// The TikTok-style caption look, shared by every fn in this project: chunky
-// uppercase words with a thick outline, the word currently being spoken
-// popped onto a colored pill. The style schema is spread into each fn's
-// propsSchema so the whole look can be restyled from props; CaptionOverlay
-// is the purely presentational piece — timing lives in the fns that use it.
+// The TikTok-style caption look: chunky uppercase words with a thick
+// outline, the word currently being spoken popped onto a colored pill. The
+// style schema is spread into each fn's propsSchema so the whole look can be
+// restyled from props; CaptionOverlay is the purely presentational piece —
+// timing lives in the subtitle-cue annie that renders it.
 
 export const captionStyleSchema = z.object({
   fontSize: z.number().int().min(1).optional(),
@@ -60,8 +60,8 @@ export async function loadCaptionFonts(): Promise<FontData[]> {
 export function CaptionOverlay({
   words,
   activeIndex,
-  activePop = 1,
-  entrance = 1,
+  activePop,
+  entrance,
   style,
   width,
   height,
@@ -70,9 +70,9 @@ export function CaptionOverlay({
   /** Index of the highlighted word; -1 highlights nothing. */
   activeIndex: number;
   /** Eased 0–1 progress of the active word's pop onto its pill. */
-  activePop?: number;
+  activePop: number;
   /** Eased 0–1 progress of the whole block scaling in. */
-  entrance?: number;
+  entrance: number;
   style: ResolvedCaptionStyle;
   width: number;
   height: number;
