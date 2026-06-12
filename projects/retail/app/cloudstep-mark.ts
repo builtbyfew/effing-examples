@@ -1,8 +1,8 @@
-// The fictional shoe shop's logo mark, generated from the Cloudstep logo
-// SVG (assets/cloudstep-logo.svg). Coordinates are plain SVG space in a
-// 940x534 box — no transform needed. The cloud path includes the seam
-// flowing to the shoe and is meant to be filled with CLOUD_GRADIENT
-// (lavender dissolving to the shoe line's white).
+// The fictional shoe shop's logo mark, extracted from the Cloudstep logo
+// SVG. Coordinates are plain SVG space in a 940x534 box — no transform
+// needed. The cloud path includes the seam flowing to the shoe and is meant
+// to be filled with CLOUD_GRADIENT (lavender dissolving to the shoe line's
+// white).
 
 export const MARK_VIEWBOX = { width: 940, height: 534 };
 
