@@ -4,6 +4,7 @@ import { effieData, effieSegment, effieWebUrl } from "@effing/effie";
 import { fnUrl } from "@effing/fn";
 import type { RunnerArgs, EffieRunnerReturn } from "@effing/fn";
 import { captionStyleSchema } from "~/captions";
+import { jfkRiceSpeech } from "~/jfk-rice-speech";
 import type { SubtitleCueProps } from "~/annies/subtitle-cue.fn";
 import type { SubtitleCoverProps } from "~/images/subtitle-cover.fn";
 import type { SubtitleOutroProps } from "~/images/subtitle-outro.fn";
@@ -34,6 +35,7 @@ const cueSchema = z.object({
 });
 
 export const propsSchema = z.object({
+  // The video and its captions.
   videoUrl: z.string().url(),
   /**
    * Seconds of the video to play (effies can't probe the file, so this must
@@ -43,6 +45,19 @@ export const propsSchema = z.object({
   cues: z.array(cueSchema).min(1),
   /** Keep the video's own audio track. Defaults to true. */
   keepAudio: z.boolean().optional(),
+
+  // The cover, doubling as the intro title card.
+  /** Title for the cover (and the intro title card, if enabled). */
+  coverText: z.string().min(1),
+  /** Small line above the cover title (e.g. who is speaking, where, when). */
+  coverKicker: z.string().optional(),
+  /**
+   * Seconds to open on the cover as a title card, crossfading into the
+   * video. Defaults to 0 (the video starts right away).
+   */
+  introDuration: z.number().min(0).optional(),
+
+  // The ending.
   /**
    * Fade the ending (and the audio) out over this many seconds — useful when
    * `videoDuration` cuts the video short. Fades into the outro card when
@@ -56,103 +71,23 @@ export const propsSchema = z.object({
   outroText: z.string().optional(),
   /** Seconds to hold the outro card after the fade. Defaults to 1.5. */
   outroDuration: z.number().min(0).optional(),
-  /**
-   * Seconds to open on the cover as a title card, crossfading into the
-   * video. Defaults to 0 (the video starts right away).
-   */
-  introDuration: z.number().min(0).optional(),
-  /** Title for the cover (and the intro title card, if enabled). */
-  coverText: z.string().min(1),
-  /** Small line above the cover title (e.g. who is speaking, where, when). */
-  coverKicker: z.string().optional(),
+
   ...captionStyleSchema.shape,
 });
 
 type SubtitledVideoProps = z.infer<typeof propsSchema>;
 
-// The preview captions the opening of NASA's "We Chose: The Inspiration of
-// Apollo" (public domain), which starts with JFK's 1962 Rice University
-// speech. Word timings come from a Whisper transcription of the clip, so the
-// karaoke highlight tracks the actual voice.
+// JFK's "We choose to go to the Moon" speech, with Whisper-derived word
+// timings — see jfk-rice-speech.ts for the clip's provenance.
 export const previewProps: SubtitledVideoProps = {
-  videoUrl:
-    "https://images-assets.nasa.gov/video/jsc2019m000363_We_Chose_The_Inspiration_of_Apollo_mp4_1_720/jsc2019m000363_We_Chose_The_Inspiration_of_Apollo_mp4_1_720~medium.mp4",
+  ...jfkRiceSpeech,
   videoDuration: 11,
-  introDuration: 1.5,
-  endFadeOut: 1,
-  highlightColor: "#00c853",
   coverText: "We choose to go to the Moon",
   coverKicker: "JFK · Rice University · 1962",
+  introDuration: 1.5,
+  endFadeOut: 1,
   outroText: "Footage courtesy of NASA",
-  cues: [
-    {
-      text: "The exploration of space",
-      start: 0.0,
-      end: 1.7,
-      words: [
-        { text: "The", start: 0.0, end: 0.48 },
-        { text: "exploration", start: 0.48, end: 0.96 },
-        { text: "of", start: 0.96, end: 1.46 },
-        { text: "space", start: 1.46, end: 1.72 },
-      ],
-    },
-    {
-      text: "will go ahead",
-      start: 1.72,
-      end: 2.85,
-      words: [
-        { text: "will", start: 1.72, end: 2.08 },
-        { text: "go", start: 2.08, end: 2.32 },
-        { text: "ahead", start: 2.32, end: 2.6 },
-      ],
-    },
-    {
-      text: "whether we join in it or not",
-      start: 3.04,
-      end: 5.65,
-      words: [
-        { text: "whether", start: 3.04, end: 3.76 },
-        { text: "we", start: 3.76, end: 4.04 },
-        { text: "join", start: 4.04, end: 4.34 },
-        { text: "in", start: 4.34, end: 4.8 },
-        { text: "it", start: 4.8, end: 4.9 },
-        { text: "or", start: 4.9, end: 5.04 },
-        { text: "not", start: 5.04, end: 5.4 },
-      ],
-    },
-    {
-      text: "and it is",
-      start: 5.72,
-      end: 7.24,
-      words: [
-        { text: "and", start: 5.72, end: 6.9 },
-        { text: "it", start: 6.9, end: 7.1 },
-        { text: "is", start: 7.1, end: 7.26 },
-      ],
-    },
-    {
-      text: "one of the great adventures",
-      start: 7.26,
-      end: 8.32,
-      words: [
-        { text: "one", start: 7.26, end: 7.56 },
-        { text: "of", start: 7.56, end: 7.76 },
-        { text: "the", start: 7.76, end: 7.86 },
-        { text: "great", start: 7.86, end: 8.1 },
-        { text: "adventures", start: 8.1, end: 8.34 },
-      ],
-    },
-    {
-      text: "of all time",
-      start: 8.34,
-      end: 9.69,
-      words: [
-        { text: "of", start: 8.34, end: 8.84 },
-        { text: "all", start: 8.84, end: 9.02 },
-        { text: "time", start: 9.02, end: 9.44 },
-      ],
-    },
-  ],
+  highlightColor: "#00c853",
 };
 
 const FPS = 30;
@@ -174,6 +109,7 @@ function cueWordTimings(cue: z.infer<typeof cueSchema>): CueWord[] {
     }));
   }
   const texts = cue.text.split(/\s+/).filter(Boolean);
+  // The +2 keeps short words from flashing by — "a" still takes a beat.
   const weights = texts.map((text) => text.length + 2);
   const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
   const words: CueWord[] = [];
@@ -192,10 +128,10 @@ export async function runner({
     videoDuration,
     cues,
     keepAudio = true,
-    endFadeOut = 0,
-    introDuration = 0,
     coverText,
     coverKicker,
+    introDuration = 0,
+    endFadeOut = 0,
     outroText,
     outroDuration = 1.5,
     ...captionStyle
@@ -288,6 +224,8 @@ export async function runner({
               { width, height },
             ),
             delay: cue.start,
+            // Hidden until the intro crossfade completes (clamped so `from`
+            // stays inside the cue's own window).
             from: Math.min(Math.max(cue.start, introFade), cue.end),
             until: cue.end,
           })),
