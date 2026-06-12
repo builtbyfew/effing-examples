@@ -52,8 +52,8 @@ export const propsSchema = z.object({
    * video. Defaults to 0 (the video starts right away).
    */
   introDuration: z.number().min(0).optional(),
-  /** Cover title; defaults to the first cue's text. */
-  coverText: z.string().optional(),
+  /** Title for the cover (and the intro title card, if enabled). */
+  coverText: z.string().min(1),
   /** Small line above the cover title (e.g. who is speaking, where, when). */
   coverKicker: z.string().optional(),
   ...captionStyleSchema.shape,
@@ -72,6 +72,7 @@ export const previewProps: SubtitledVideoProps = {
   introDuration: 1.5,
   endFadeOut: 1,
   highlightColor: "#00c853",
+  coverText: "We choose to go to the Moon",
   coverKicker: "JFK · Rice University · 1962",
   cues: [
     {
@@ -206,7 +207,7 @@ export async function runner({
     "image",
     "subtitle-cover",
     {
-      text: coverText ?? cues[0]!.text,
+      text: coverText,
       kicker: coverKicker,
       ...captionStyle,
     } satisfies SubtitleCoverProps,
