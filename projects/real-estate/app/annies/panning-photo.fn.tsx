@@ -87,6 +87,9 @@ export async function* runner({
       oversize,
       progress: easedProgress,
     });
+    // Per-frame canvas: tween() overlaps frame callbacks, and encode() is
+    // async — a canvas shared across frames could be redrawn by a neighboring
+    // frame before this frame's pixels are captured.
     const canvas = createCanvas(width, height);
     canvas.getContext("2d").drawImage(image, sx, sy, sw, sh, 0, 0, width, height);
     return canvas.encode("jpeg");

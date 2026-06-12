@@ -1,34 +1,33 @@
 import { z } from "zod";
-import {
-  frauncesBold,
-  manropeMedium,
-  manropeSemiBold,
-  loadFonts,
-} from "~/fonts";
-import {
-  tween,
-  easeOutQuad,
-  easeOutCubic,
-  easeOutQuart,
-} from "@effing/tween";
-import { createCanvas, renderReactElement } from "@effing/canvas";
+import { frauncesBold, manropeMedium, manropeSemiBold, loadFonts } from "~/fonts";
+import { tween, easeOutQuad, easeOutCubic, easeOutQuart } from "@effing/tween";
+import { createCanvas, loadImage, renderReactElement } from "@effing/canvas";
 import type { RunnerArgs, AnnieRunnerReturn } from "@effing/fn";
-import { fontFamily } from "~/theme";
 import {
+  AmbientGlow,
+  ContactPanel,
+  DEFAULT_EYEBROW,
+  EstMark,
+  Eyebrow,
+  FlourishWrap,
+  HairlineFrame,
+  NameLine,
+  PortraitFrame,
+  PortraitGlow,
+  SubWordmark,
+  Wordmark,
   clamp01,
   computeLayout,
-  Decorations,
-  DECORATION_COUNT,
-  DECORATION_TIMING,
-  EstMark,
-  Flourish,
-  luxe,
-  Photo,
-  PhotoBloom,
+  drawBase,
+  drawPortraitPhoto,
   splitWordmark,
-  SubWordmark,
   type Layout,
-} from "~/images/realtor-card.fn";
+} from "~/realtor-card-design";
+
+// Animated counterpart of the realtor-card image — the same dark sign-off
+// design from ~/realtor-card-design, driven by a 30 fps beat sheet: the
+// backdrop ken-burns in, the ring sweeps around the portrait, and the text
+// stack reveals top to bottom.
 
 export const propsSchema = z.object({
   photoUrl: z.string().url(),
@@ -36,6 +35,10 @@ export const propsSchema = z.object({
   company: z.string(),
   phone: z.string(),
   email: z.string(),
+  // Listing photo that bleeds into the card's backdrop; the slide falls back
+  // to a plain dark backdrop with an ambient glow when omitted.
+  backdropUrl: z.string().url().optional(),
+  eyebrow: z.string().optional(),
   totalFrameCount: z.number().int().min(1),
   fadeInFrameCount: z.number().int().min(1).optional(),
   // Used to scale the internal beat sheet (originally authored at 30 fps) to
@@ -53,7 +56,9 @@ export const previewProps: RealtorCardProps = {
   company: "Capitop Realty Group",
   phone: "+1 (202) 555-0100",
   email: "margaret@capitop.estate",
-  totalFrameCount: 120,
+  backdropUrl:
+    "https://static.effing.dev/fake-white-house/fake-white-house-drone-shot.jpg",
+  totalFrameCount: 210,
   fadeInFrameCount: 18,
 };
 
@@ -64,42 +69,68 @@ export async function* runner({
     company,
     phone,
     email,
+    backdropUrl,
+    eyebrow = DEFAULT_EYEBROW,
     totalFrameCount,
     fadeInFrameCount = 18,
     fps = 30,
   },
   bounds: { width, height },
 }: RunnerArgs<RealtorCardProps>): AnnieRunnerReturn {
-  const fonts = await loadFonts([
-    frauncesBold,
-    manropeMedium,
-    manropeSemiBold,
-  ]);
+  const fonts = await loadFonts([frauncesBold, manropeMedium, manropeSemiBold]);
   const layout = computeLayout(width, height);
   const nameWords = name.split(" ");
   const { head, tail } = splitWordmark(company);
   const headChars = head.split("");
+  const eyebrowText = eyebrow.toUpperCase();
+
+  // renderReactElement builds a fresh image cache on every call, so an
+  // <img> in the per-frame tree would re-fetch and re-decode its source for
+  // each of the ~200 frames. Load both photos once and draw them with raw
+  // canvas ops instead; the React tree only carries vectors and text.
+  const [backdropImage, portraitImage] = await Promise.all([
+    backdropUrl ? loadImage(backdropUrl) : null,
+    loadImage(photoUrl),
+  ]);
 
   yield* tween(totalFrameCount, async (_interval, frame) => {
+    // tween() runs frame callbacks concurrently (up to CPU parallelism), and
+    // this callback suspends at the awaited renderReactElement mid-draw — so
+    // the canvas must be per-frame; a shared one would be overwritten by
+    // neighboring frames before this one reaches encode().
     const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext("2d");
+    const beats = computeBeats(frame, {
+      totalFrameCount,
+      fadeInFrameCount,
+      fps,
+      height,
+    });
+    drawBase(ctx, layout, backdropImage, beats.kenBurns, beats.containerFade);
     await renderReactElement(
-      canvas.getContext("2d"),
-      <Card
+      ctx,
+      <CardOverlay
         layout={layout}
-        photoUrl={photoUrl}
+        beats={beats}
+        hasBackdrop={backdropImage != null}
+        eyebrowText={eyebrowText}
         nameWords={nameWords}
         headChars={headChars}
         tail={tail}
         phone={phone}
         email={email}
-        frame={frame}
-        totalFrameCount={totalFrameCount}
-        fadeInFrameCount={fadeInFrameCount}
-        fps={fps}
       />,
       { fonts },
     );
-    return canvas.encode("png");
+    drawPortraitPhoto(
+      ctx,
+      portraitImage,
+      layout,
+      beats.photoScale * beats.breath,
+      beats.photoFade,
+      beats.liftY,
+    );
+    return canvas.encode("jpeg");
   });
 }
 
@@ -107,66 +138,87 @@ function progress(frame: number, startFrame: number, durationFrames: number) {
   return clamp01((frame - startFrame) / durationFrames);
 }
 
-function Card({
+// Per-frame animation values, all derived from the frame index. Hardcoded
+// frame numbers here were authored against 30 fps; s() stretches them to the
+// current rate, and rates passed to Math.sin are divided by the same factor
+// to keep the temporal frequency stable.
+function computeBeats(
+  frame: number,
+  {
+    totalFrameCount,
+    fadeInFrameCount,
+    fps,
+    height,
+  }: {
+    totalFrameCount: number;
+    fadeInFrameCount: number;
+    fps: number;
+    height: number;
+  },
+) {
+  const fpsScale = fps / 30;
+  const s = (f: number) => f * fpsScale;
+
+  const containerFade = easeOutCubic(progress(frame, 0, fadeInFrameCount));
+  const photoFade = easeOutCubic(progress(frame, s(22), s(26)));
+
+  return {
+    frame,
+    s,
+    containerFade,
+    liftY: (1 - containerFade) * Math.round(height * 0.015),
+    kenBurns: 1.08 + 0.07 * (frame / Math.max(1, totalFrameCount)),
+    frameReveal: easeOutQuad(progress(frame, s(16), s(34))),
+    glowReveal: easeOutQuad(progress(frame, s(8), s(30))),
+    eyebrowReveal: easeOutQuart(progress(frame, s(14), s(20))),
+    photoFade,
+    photoScale: 0.92 + 0.08 * easeOutCubic(progress(frame, s(22), s(30))),
+    breath: 1 + 0.003 * Math.sin(frame * (0.04 / fpsScale)) * photoFade,
+    ringSweep: easeOutQuart(progress(frame, s(26), s(34))),
+    pulse: 1 + 0.04 * Math.sin(frame * (0.06 / fpsScale)),
+    nameReveal: progress(frame, s(52), s(24)),
+    flourishReveal: easeOutQuart(progress(frame, s(70), s(22))),
+    subWordmarkReveal: easeOutQuart(progress(frame, s(92), s(14))),
+    contactPanelReveal: easeOutCubic(progress(frame, s(96), s(18))),
+    contactRowReveals: [
+      easeOutQuart(progress(frame, s(102), s(14))),
+      easeOutQuart(progress(frame, s(108), s(14))),
+    ] as [number, number],
+    estReveal: easeOutQuart(progress(frame, s(112), s(18))),
+  };
+}
+
+type Beats = ReturnType<typeof computeBeats>;
+
+// Everything except the backdrop and the portrait photo — vectors and text
+// only, so the per-frame React render never touches an image source.
+function CardOverlay({
   layout,
-  photoUrl,
+  beats,
+  hasBackdrop,
+  eyebrowText,
   nameWords,
   headChars,
   tail,
   phone,
   email,
-  frame,
-  totalFrameCount,
-  fadeInFrameCount,
-  fps,
 }: {
   layout: Layout;
-  photoUrl: string;
+  beats: Beats;
+  hasBackdrop: boolean;
+  eyebrowText: string;
   nameWords: string[];
   headChars: string[];
   tail: string;
   phone: string;
   email: string;
-  frame: number;
-  totalFrameCount: number;
-  fadeInFrameCount: number;
-  fps: number;
 }) {
   const { width, height } = layout;
-
-  // Hardcoded frame numbers in this component were authored against 30 fps.
-  // s() stretches them to the current rate; rates passed to Math.sin are
-  // divided by the same factor to keep the temporal frequency stable.
-  const fpsScale = fps / 30;
-  const s = (f: number) => f * fpsScale;
-
-  const containerFade = easeOutCubic(progress(frame, 0, fadeInFrameCount));
-  const liftY = (1 - containerFade) * Math.round(height * 0.02);
-
-  const decorationReveals = Array.from({ length: DECORATION_COUNT }, (_, i) => {
-    const t = DECORATION_TIMING[i];
-    return easeOutQuart(progress(frame, s(t.startFrame), s(t.durationFrames)));
-  });
-
-  const pulse = 1 + 0.04 * Math.sin(frame * (0.06 / fpsScale));
-
-  const photoFade = easeOutQuad(progress(frame, s(30), s(22)));
-  const kenBurns =
-    1 + 0.015 * (frame / Math.max(1, totalFrameCount)) * photoFade;
-  const breath = 1 + 0.003 * Math.sin(frame * (0.04 / fpsScale)) * photoFade;
-  const ringSweep = easeOutQuart(progress(frame, s(32), s(28)));
-  const cardinalReveals = [
-    progress(frame, s(58), s(12)),
-    progress(frame, s(63), s(12)),
-    progress(frame, s(68), s(12)),
-    progress(frame, s(73), s(12)),
-  ];
-  const bloomReveal = easeOutQuad(progress(frame, s(24), s(26)));
+  const { frame, s, liftY } = beats;
 
   const wordmarkReveals = headChars.map((_, i) =>
-    easeOutQuart(progress(frame, s(76 + i * 2), s(14))),
+    easeOutQuart(progress(frame, s(80 + i * 2), s(14))),
   );
-  const subWordmarkReveal = easeOutQuart(progress(frame, s(88), s(14)));
 
   return (
     <div
@@ -177,35 +229,35 @@ function Card({
         width,
         height,
         display: "flex",
-        backgroundColor: luxe.bone,
+        overflow: "hidden",
       }}
     >
-      <Decorations
+      {!hasBackdrop && <AmbientGlow layout={layout} />}
+      <HairlineFrame layout={layout} reveal={beats.frameReveal} />
+      <PortraitGlow layout={layout} opacity={beats.glowReveal} />
+      <Eyebrow
         layout={layout}
-        reveals={decorationReveals}
-        drift={frame / fpsScale}
+        text={eyebrowText}
+        reveal={beats.eyebrowReveal}
+        liftY={liftY}
       />
-      <PhotoBloom layout={layout} opacity={bloomReveal} />
-      <Photo
+      <PortraitFrame
         layout={layout}
-        photoUrl={photoUrl}
-        ringSweep={ringSweep}
-        cardinalReveals={cardinalReveals}
-        imageScale={kenBurns * breath}
-        imageOpacity={photoFade}
+        ringSweep={beats.ringSweep}
+        ringOpacity={beats.photoFade}
         liftY={liftY}
       />
       <NameLine
         layout={layout}
         words={nameWords}
-        reveal={progress(frame, s(48), s(24))}
+        reveal={beats.nameReveal}
         liftY={liftY}
       />
       <FlourishWrap
         layout={layout}
-        reveal={easeOutQuart(progress(frame, s(64), s(22)))}
+        reveal={beats.flourishReveal}
         liftY={liftY}
-        pulse={pulse}
+        pulse={beats.pulse}
       />
       <Wordmark
         layout={layout}
@@ -216,225 +268,18 @@ function Card({
       <SubWordmark
         layout={layout}
         text={tail}
-        reveal={subWordmarkReveal}
+        reveal={beats.subWordmarkReveal}
         liftY={liftY}
       />
-      <Contact
+      <ContactPanel
         layout={layout}
         phone={phone}
         email={email}
-        frame={frame}
+        panelReveal={beats.contactPanelReveal}
+        rowReveals={beats.contactRowReveals}
         liftY={liftY}
-        s={s}
       />
-      <EstMark layout={layout} reveal={easeOutQuart(progress(frame, s(78), s(18)))} />
-    </div>
-  );
-}
-
-function NameLine({
-  layout,
-  words,
-  reveal,
-  liftY,
-}: {
-  layout: Layout;
-  words: string[];
-  reveal: number;
-  liftY: number;
-}) {
-  const { width, text: t } = layout;
-  const perWord = 1 / Math.max(1, words.length);
-  return (
-    <div
-      style={{
-        position: "absolute",
-        top: t.blockTop,
-        left: 0,
-        width,
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "center",
-        fontFamily: fontFamily.display,
-        fontSize: t.nameSize,
-        fontWeight: 700,
-        letterSpacing: -t.nameSize * 0.018,
-        color: luxe.ink,
-        gap: Math.round(t.nameSize * 0.28),
-      }}
-    >
-      {words.map((word, i) => {
-        const local = clamp01(
-          (reveal - i * perWord * 0.55) / Math.max(perWord * 0.9, 0.22),
-        );
-        const eased = easeOutCubic(local);
-        return (
-          <div
-            key={i}
-            style={{
-              display: "flex",
-              opacity: eased,
-              transform: `translateY(${liftY + (1 - eased) * t.nameSize * 0.32}px)`,
-            }}
-          >
-            {word}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function FlourishWrap({
-  layout,
-  reveal,
-  liftY,
-  pulse,
-}: {
-  layout: Layout;
-  reveal: number;
-  liftY: number;
-  pulse: number;
-}) {
-  const { width, text } = layout;
-  return (
-    <div
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        width,
-        height: text.flourishTop + text.flourishHeight + 1,
-        display: "flex",
-        transform: `translateY(${liftY}px) scale(${pulse})`,
-        transformOrigin: `${width / 2}px ${text.flourishTop + text.flourishHeight / 2}px`,
-      }}
-    >
-      <Flourish layout={layout} reveal={reveal} />
-    </div>
-  );
-}
-
-function Wordmark({
-  layout,
-  chars,
-  reveals,
-  liftY,
-}: {
-  layout: Layout;
-  chars: string[];
-  reveals: number[];
-  liftY: number;
-}) {
-  const { width, text } = layout;
-  return (
-    <div
-      style={{
-        position: "absolute",
-        top: text.wordmarkTop,
-        left: 0,
-        width,
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "center",
-        fontFamily: fontFamily.display,
-        fontWeight: 700,
-        fontSize: text.wordmarkSize,
-        letterSpacing: text.wordmarkSize * 0.32,
-        color: luxe.brass,
-      }}
-    >
-      {chars.map((ch, i) => {
-        const r = clamp01(reveals[i] ?? 0);
-        return (
-          <div
-            key={i}
-            style={{
-              display: "flex",
-              opacity: r,
-              transform: `translateY(${liftY + (1 - r) * text.wordmarkSize * 0.4}px)`,
-            }}
-          >
-            {ch}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function Contact({
-  layout,
-  phone,
-  email,
-  frame,
-  liftY,
-  s,
-}: {
-  layout: Layout;
-  phone: string;
-  email: string;
-  frame: number;
-  liftY: number;
-  s: (f: number) => number;
-}) {
-  const { width, min, text } = layout;
-  const phoneReveal = easeOutQuart(progress(frame, s(88), s(14)));
-  const emailReveal = easeOutQuart(progress(frame, s(94), s(14)));
-  return (
-    <div
-      style={{
-        position: "absolute",
-        top: text.contactTop,
-        left: 0,
-        width,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: Math.round(min * 0.022),
-        fontFamily: fontFamily.body,
-        fontWeight: 500,
-        fontSize: text.contactSize,
-        letterSpacing: text.contactSize * 0.04,
-        color: luxe.inkSoft,
-      }}
-    >
-      <ContactRow
-        text={phone}
-        reveal={phoneReveal}
-        liftY={liftY}
-        size={text.contactSize}
-      />
-      <ContactRow
-        text={email}
-        reveal={emailReveal}
-        liftY={liftY}
-        size={text.contactSize}
-      />
-    </div>
-  );
-}
-
-function ContactRow({
-  text,
-  reveal,
-  liftY,
-  size,
-}: {
-  text: string;
-  reveal: number;
-  liftY: number;
-  size: number;
-}) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        opacity: reveal,
-        transform: `translateY(${liftY + (1 - reveal) * size * 0.6}px)`,
-      }}
-    >
-      {text}
+      <EstMark layout={layout} reveal={beats.estReveal} />
     </div>
   );
 }

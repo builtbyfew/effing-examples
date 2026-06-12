@@ -242,9 +242,17 @@ export async function runner({
   );
 
   const realtorLayers = await Promise.all([
-    buildRealtorLayer(realtor, "background", { width, height }, {
-      effects: [fadeIn(0, 0.45), saturateIn(0, 0.45)],
-    }),
+    buildRealtorLayer(
+      realtor,
+      "background",
+      { width, height },
+      {
+        effects: [fadeIn(0, 0.45), saturateIn(0, 0.45)],
+      },
+      // The last photo the viewer just saw bleeds into the card's dark
+      // backdrop, matching listing-promo-fancy's ending.
+      slides[slides.length - 1].imageUrl,
+    ),
     buildRealtorLayer(realtor, "photo", { width, height }, {
       motion: slideMotion({
         direction: "up",
@@ -394,6 +402,7 @@ async function buildRealtorLayer(
   part: RealtorPart,
   bounds: Bounds,
   animation: Pick<ImageLayer, "effects" | "motion"> = {},
+  backdropUrl?: string,
 ): Promise<ImageLayer> {
   return {
     type: "image",
@@ -406,6 +415,7 @@ async function buildRealtorLayer(
         company: realtor.company,
         phone: realtor.phone,
         email: realtor.email,
+        ...(backdropUrl ? { backdropUrl } : {}),
         part,
       } satisfies RealtorCardImageProps,
       bounds,

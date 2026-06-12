@@ -91,6 +91,9 @@ const FPS = 30;
 const TRANSITION_DURATION = 1.5;
 const PHOTO_DURATION = 5;
 const REALTOR_DURATION = 5;
+// Quiet hold on the finished card before the video ends; the annie keeps
+// breathing (ken burns, drift) through it, so it spans these frames too.
+const REALTOR_HOLD = 2;
 const PAN_DISTANCE = 0.5;
 const PAN_OVERSIZE = 1.0;
 
@@ -102,8 +105,14 @@ export async function runner({
   const photoFrameCount = Math.max(1, Math.round(PHOTO_DURATION * FPS));
   const pillStaggerFrameCount = Math.round(FPS * 0.35);
   const pillEntryFrameCount = Math.round(FPS * 1.0);
-  const realtorFrameCount = Math.max(1, Math.round(REALTOR_DURATION * FPS));
+  const realtorFrameCount = Math.max(
+    1,
+    Math.round((REALTOR_DURATION + REALTOR_HOLD) * FPS),
+  );
   const realtorFadeInFrameCount = Math.round(FPS * 0.6);
+  const lastScene = scenes[scenes.length - 1];
+  const lastSceneImageUrl =
+    lastScene.imageUrls[lastScene.imageUrls.length - 1];
 
   // One segment per scene. Within a segment, photos slide between each other
   // via intra-segment motion so pills can stay glued on top. Between scenes,
@@ -287,7 +296,7 @@ export async function runner({
     segments: [
       ...sceneSegments,
       effieSegment({
-        duration: REALTOR_DURATION + 2,
+        duration: REALTOR_DURATION + REALTOR_HOLD,
         transition: { type: "fade", duration: TRANSITION_DURATION },
         ...(realtor.voiceOverUrl
           ? { audio: { source: effieWebUrl(realtor.voiceOverUrl) } }
@@ -304,6 +313,10 @@ export async function runner({
                 company: realtor.company,
                 phone: realtor.phone,
                 email: realtor.email,
+                // The last photo the viewer just saw bleeds into the card's
+                // dark backdrop, so the fade reads as the listing dimming
+                // into the sign-off rather than a hard scene change.
+                backdropUrl: lastSceneImageUrl,
                 totalFrameCount: realtorFrameCount,
                 fadeInFrameCount: realtorFadeInFrameCount,
                 fps: FPS,
