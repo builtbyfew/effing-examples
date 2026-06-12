@@ -25,6 +25,9 @@ export const propsSchema = z.object({
   accentColor: z.string().optional(),
   // Multiplies typing and reading pauses; > 1 slows the conversation down.
   pace: z.number().positive().optional(),
+  // Number of leading messages already on screen at frame 0 — e.g. one
+  // whose notification was just tapped to open this chat.
+  seededCount: z.number().int().min(0).optional(),
   holdFrames: z.number().int().min(0).optional(),
   // When used as a layer in an effie, omit this so the chat chrome image
   // shows through. Set it in previewProps for a standalone preview.
@@ -65,16 +68,25 @@ function clampInt(value: number, min: number, max: number): number {
  * Frame schedule for a conversation: when each message's typing indicator
  * appears, when the bubble pops in, and the total length. Pure function of
  * the messages, so effies can derive their segment duration from it.
+ *
+ * The first `seededCount` messages are already on screen at frame 0: their
+ * pop is set a full entry before the start so every entry animation has
+ * finished, and they take no typing or reading time.
  */
 export function conversationSchedule(
   messages: ChatMessage[],
   pace = 1,
   holdFrames = 42,
+  seededCount = 0,
 ): ConversationSchedule {
   const events: ScheduleEvent[] = [];
   let t = 6;
 
-  for (const msg of messages) {
+  for (const [i, msg] of messages.entries()) {
+    if (i < seededCount) {
+      events.push({ pop: -SLIDE_FRAMES });
+      continue;
+    }
     const effort = (msg.text?.length ?? 0) + (msg.imageUrl ? 30 : 0);
     if (msg.sender === "contact") {
       const typing = clampInt(effort * 1.05 * pace, 26, 64);
@@ -184,6 +196,7 @@ export async function* runner({
     timestampLabel = "Today 9:41",
     accentColor = "#7c5cd6",
     pace = 1,
+    seededCount = 0,
     holdFrames = 42,
     backgroundColor,
   },
@@ -195,6 +208,7 @@ export async function* runner({
     messages,
     pace,
     holdFrames,
+    seededCount,
   );
 
   // Pre-render every element once. Each message gets two variants — bottom

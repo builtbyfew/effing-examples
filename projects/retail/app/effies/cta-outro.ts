@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { effieSegment, effieWebUrl } from "@effing/effie";
-import type { EffieTransition } from "@effing/effie";
+import type {
+  EffieBackground,
+  EffieSources,
+  EffieTransition,
+} from "@effing/effie";
 import { fnUrl } from "@effing/fn";
 import type { TextTypewriterProps } from "~/annies/text-typewriter.fn";
 import type { PriceTagProps } from "~/images/price-tag.fn";
@@ -29,12 +33,22 @@ export async function ctaOutroSegment(opts: {
   accentColor: string;
   soundEffects: boolean;
   transition: EffieTransition;
+  // Override the effie's global background for this segment.
+  background?: EffieBackground<EffieSources>;
   width: number;
   height: number;
   fps: number;
 }) {
-  const { props, accentColor, soundEffects, transition, width, height, fps } =
-    opts;
+  const {
+    props,
+    accentColor,
+    soundEffects,
+    transition,
+    background,
+    width,
+    height,
+    fps,
+  } = opts;
   const typingFrameCount = Math.min(props.ctaText.length * 3, 60);
   const blinkingFrameCount = Math.max(
     Math.round((DURATION - TEXT_DELAY) * fps) - typingFrameCount,
@@ -44,6 +58,7 @@ export async function ctaOutroSegment(opts: {
   return effieSegment({
     duration: DURATION,
     transition,
+    background,
     audio: soundEffects
       ? {
           source: effieWebUrl(
