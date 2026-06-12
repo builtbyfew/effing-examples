@@ -27,7 +27,7 @@ type ProductPromoProps = z.infer<typeof propsSchema>;
 
 export const previewProps: ProductPromoProps = {
   kicker: "New drop",
-  productName: "Cloudstep 574",
+  productName: "NB 574",
   tagline: "Running shoes that float",
   features: [
     "Featherlight bubble sole",

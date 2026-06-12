@@ -18,7 +18,7 @@ export type PromoHeadlineProps = z.infer<typeof propsSchema>;
 
 export const previewProps: PromoHeadlineProps = {
   kicker: "New drop",
-  productName: "Cloudstep 574",
+  productName: "NB 574",
   tagline: "Running shoes that float",
   backgroundImageUrl:
     "https://static.effing.dev/unsplash/sneakers/max-petrunin-A4fETzh_wlo-unsplash.jpg",

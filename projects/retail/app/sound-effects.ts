@@ -70,6 +70,9 @@ export function chatSoundEffectsDataUrl(
   );
 
   events.forEach(({ typeStart, pop }, i) => {
+    // Seeded messages (already on screen at frame 0) pop before the segment
+    // starts and make no sound.
+    if (pop < 0) return;
     if (messages[i].sender === "user") {
       addBlip(samples, pop / fps, 0.1, 660, 880, 0.32);
     } else {
@@ -84,6 +87,29 @@ export function chatSoundEffectsDataUrl(
   if (receiptFrame) {
     addBlip(samples, receiptFrame / fps, 0.06, 880, 1320, 0.1);
   }
+
+  return toWavDataUrl(samples);
+}
+
+/**
+ * Effects for the notification intro: a two-note ascending chime when the
+ * banner drops in, and a soft fingertip thump (low knock plus a tiny click)
+ * when it's tapped.
+ */
+export function notificationIntroSoundEffectsDataUrl(opts: {
+  durationSec: number;
+  popSec: number;
+  tapSec: number;
+}): string {
+  const { durationSec, popSec, tapSec } = opts;
+  const samples = new Float32Array(Math.ceil(durationSec * SAMPLE_RATE));
+
+  // D6 then G6 — the classic "you've got a message" interval.
+  addBlip(samples, popSec, 0.22, 1175, 1175, 0.2);
+  addBlip(samples, popSec + 0.09, 0.32, 1568, 1568, 0.24);
+
+  addBlip(samples, tapSec, 0.05, 300, 170, 0.38);
+  addBlip(samples, tapSec, 0.025, 1900, 1500, 0.1);
 
   return toWavDataUrl(samples);
 }

@@ -19,7 +19,7 @@ export const sampleConversation: ChatMessage[] = [
     sender: "contact",
     imageUrl:
       "https://static.effing.dev/unsplash/sneakers/max-petrunin-A4fETzh_wlo-unsplash.jpg",
-    text: "The Cloudstep 574 just dropped 👟",
+    text: "The NB 574 just dropped 👟",
   },
   { sender: "user", text: "okay these are gorgeous 😍" },
   { sender: "user", text: "do they actually feel like clouds?" },
