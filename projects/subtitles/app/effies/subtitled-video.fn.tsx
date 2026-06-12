@@ -47,8 +47,15 @@ export const propsSchema = z.object({
    * useful when `videoDuration` cuts the video short. Defaults to 0 (off).
    */
   endFadeOut: z.number().min(0).optional(),
-  /** Cover image text; defaults to the first cue's text. */
+  /**
+   * Seconds to open on the cover as a title card, crossfading into the
+   * video. Defaults to 0 (the video starts right away).
+   */
+  introDuration: z.number().min(0).optional(),
+  /** Cover title; defaults to the first cue's text. */
   coverText: z.string().optional(),
+  /** Small line above the cover title (e.g. who is speaking, where, when). */
+  coverKicker: z.string().optional(),
   ...captionStyleSchema.shape,
 });
 
@@ -62,8 +69,10 @@ export const previewProps: SubtitledVideoProps = {
   videoUrl:
     "https://images-assets.nasa.gov/video/jsc2019m000363_We_Chose_The_Inspiration_of_Apollo_mp4_1_720/jsc2019m000363_We_Chose_The_Inspiration_of_Apollo_mp4_1_720~medium.mp4",
   videoDuration: 11,
+  introDuration: 1.5,
   endFadeOut: 1,
   highlightColor: "#00c853",
+  coverKicker: "JFK · Rice University · 1962",
   cues: [
     {
       text: "The exploration of space",
@@ -173,7 +182,9 @@ export async function runner({
     cues,
     keepAudio = true,
     endFadeOut = 0,
+    introDuration = 0,
     coverText,
+    coverKicker,
     ...captionStyle
   },
   bounds: { width, height },
@@ -186,11 +197,17 @@ export async function runner({
     );
   }
 
+  // The intro crossfade overlaps the start of the video segment, so cue
+  // layers stay hidden (`from` below) until it completes — otherwise an
+  // early cue would pop in on top of the fading title card.
+  const introFade = Math.min(0.5, introDuration);
+
   const cover = await fnUrl(
     "image",
     "subtitle-cover",
     {
       text: coverText ?? cues[0]!.text,
+      kicker: coverKicker,
       ...captionStyle,
     } satisfies SubtitleCoverProps,
     { width, height },
@@ -201,10 +218,28 @@ export async function runner({
     height,
     fps: FPS,
     cover,
-    background: { type: "video", source: effieWebUrl(videoUrl) },
+    background: { type: "color", color: "#000000" },
     segments: [
+      // Title card intro: the cover held full-frame, crossfading into the
+      // video.
+      ...(introDuration > 0
+        ? [
+            effieSegment({
+              duration: introDuration,
+              layers: [{ type: "image" as const, source: cover }],
+            }),
+          ]
+        : []),
       effieSegment({
         duration: videoDuration,
+        // The video is this segment's own background (not the global one):
+        // a segment background starts playing at its segment's start, which
+        // keeps cue timings aligned even with an intro in front.
+        background: { type: "video", source: effieWebUrl(videoUrl) },
+        transition:
+          introDuration > 0
+            ? { type: "fade" as const, duration: introFade }
+            : undefined,
         // A video background brings only pixels — its soundtrack has to be
         // mixed back in as segment audio.
         audio: keepAudio
@@ -231,6 +266,7 @@ export async function runner({
               { width, height },
             ),
             delay: cue.start,
+            from: Math.min(Math.max(cue.start, introFade), cue.end),
             until: cue.end,
           })),
         ),

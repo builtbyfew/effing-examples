@@ -8,12 +8,14 @@ import {
   resolveCaptionStyle,
 } from "~/captions";
 
-// Cover still for the subtitled video: the caption look frozen on its last
-// word, centered on a gradient derived from the highlight color, so the
-// thumbnail reads as "this video has captions".
+// Cover for the subtitled video, doubling as its title card: the caption
+// look frozen on its last word, centered on a gradient derived from the
+// highlight color, with an optional kicker line up top for attribution.
 
 export const propsSchema = z.object({
   text: z.string().min(1),
+  /** Small line above the title (e.g. who is speaking, where, when). */
+  kicker: z.string().min(1).optional(),
   ...captionStyleSchema.shape,
 });
 
@@ -21,6 +23,7 @@ export type SubtitleCoverProps = z.infer<typeof propsSchema>;
 
 export const previewProps: SubtitleCoverProps = {
   text: "Captions that actually slap",
+  kicker: "Effing · subtitles example",
 };
 
 /** Darken a `#rrggbb` color by the given factor (0 = black, 1 = unchanged). */
@@ -58,6 +61,26 @@ export async function runner({
         backgroundImage: `linear-gradient(160deg, ${shade(style.highlightColor, 0.2)}, ${shade(style.highlightColor, 0.45)}, ${shade(style.highlightColor, 0.14)})`,
       }}
     >
+      {props.kicker ? (
+        <div
+          style={{
+            position: "absolute",
+            top: height * 0.17,
+            left: 0,
+            right: 0,
+            display: "flex",
+            justifyContent: "center",
+            fontFamily: "Inter",
+            fontWeight: 900,
+            fontSize: style.fontSize * 0.3,
+            letterSpacing: style.fontSize * 0.05,
+            color: "rgba(255, 255, 255, 0.82)",
+            textTransform: "uppercase",
+          }}
+        >
+          {props.kicker}
+        </div>
+      ) : null}
       <CaptionOverlay
         words={words}
         activeIndex={words.length - 1}
