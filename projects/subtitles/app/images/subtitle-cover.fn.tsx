@@ -1,7 +1,12 @@
 import { z } from "zod";
 import { createCanvas, renderReactElement } from "@effing/canvas";
 import type { RunnerArgs, ImageRunnerReturn } from "@effing/fn";
-import { captionStyleSchema, loadCaptionFonts, resolveCaptionStyle } from "~/captions";
+import {
+  captionGradient,
+  captionStyleSchema,
+  loadCaptionFonts,
+  resolveCaptionStyle,
+} from "~/captions";
 
 // Cover for the subtitled video, doubling as its title card. It shares the
 // captions' palette and typeface but is deliberately NOT styled like a
@@ -23,18 +28,6 @@ export const previewProps: SubtitleCoverProps = {
   kicker: "Effing · subtitles example",
 };
 
-/** Darken a `#rrggbb` color by the given factor (0 = black, 1 = unchanged). */
-function shade(hex: string, factor: number): string {
-  const match = /^#?([0-9a-f]{6})$/i.exec(hex);
-  if (!match) return hex;
-  const rgb = parseInt(match[1]!, 16);
-  const channel = (shift: number) =>
-    Math.round(((rgb >> shift) & 0xff) * factor)
-      .toString(16)
-      .padStart(2, "0");
-  return `#${channel(16)}${channel(8)}${channel(0)}`;
-}
-
 export async function runner({
   props,
   bounds: { width, height },
@@ -54,7 +47,7 @@ export async function runner({
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        backgroundImage: `linear-gradient(160deg, ${shade(style.highlightColor, 0.2)}, ${shade(style.highlightColor, 0.45)}, ${shade(style.highlightColor, 0.14)})`,
+        backgroundImage: captionGradient(style.highlightColor),
       }}
     >
       {props.kicker ? (

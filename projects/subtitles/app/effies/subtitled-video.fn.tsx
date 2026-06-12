@@ -6,6 +6,7 @@ import type { RunnerArgs, EffieRunnerReturn } from "@effing/fn";
 import { captionStyleSchema } from "~/captions";
 import type { SubtitleCueProps } from "~/annies/subtitle-cue.fn";
 import type { SubtitleCoverProps } from "~/images/subtitle-cover.fn";
+import type { SubtitleOutroProps } from "~/images/subtitle-outro.fn";
 
 // Overlays TikTok-style word-by-word subtitles on a given video. The video
 // plays as the (single) segment's background and keeps its own audio; each
@@ -43,10 +44,18 @@ export const propsSchema = z.object({
   /** Keep the video's own audio track. Defaults to true. */
   keepAudio: z.boolean().optional(),
   /**
-   * Fade the ending to black (and the audio out) over this many seconds —
-   * useful when `videoDuration` cuts the video short. Defaults to 0 (off).
+   * Fade the ending (and the audio) out over this many seconds — useful when
+   * `videoDuration` cuts the video short. Fades into the outro card when
+   * `outroText` is set, to black otherwise. Defaults to 0 (off).
    */
   endFadeOut: z.number().min(0).optional(),
+  /**
+   * Closing card text (typically attribution); the video ends on this card
+   * instead of a black frame. Defaults to no outro card.
+   */
+  outroText: z.string().optional(),
+  /** Seconds to hold the outro card after the fade. Defaults to 1.5. */
+  outroDuration: z.number().min(0).optional(),
   /**
    * Seconds to open on the cover as a title card, crossfading into the
    * video. Defaults to 0 (the video starts right away).
@@ -74,6 +83,7 @@ export const previewProps: SubtitledVideoProps = {
   highlightColor: "#00c853",
   coverText: "We choose to go to the Moon",
   coverKicker: "JFK · Rice University · 1962",
+  outroText: "Footage courtesy of NASA",
   cues: [
     {
       text: "The exploration of space",
@@ -186,6 +196,8 @@ export async function runner({
     introDuration = 0,
     coverText,
     coverKicker,
+    outroText,
+    outroDuration = 1.5,
     ...captionStyle
   },
   bounds: { width, height },
@@ -213,6 +225,15 @@ export async function runner({
     } satisfies SubtitleCoverProps,
     { width, height },
   );
+
+  const outro = outroText
+    ? await fnUrl(
+        "image",
+        "subtitle-outro",
+        { text: outroText, ...captionStyle } satisfies SubtitleOutroProps,
+        { width, height },
+      )
+    : null;
 
   return effieData({
     width,
@@ -272,15 +293,21 @@ export async function runner({
           })),
         ),
       }),
-      // A black segment crossfaded over the video's tail, so a mid-footage
-      // cut ends on a deliberate fade instead of a hard stop.
-      ...(endFadeOut > 0
+      // Ending: crossfade the video's tail into the outro card (or plain
+      // black without one), so a mid-footage cut ends on a deliberate note
+      // instead of a hard stop.
+      ...(outro || endFadeOut > 0
         ? [
             effieSegment({
-              duration: endFadeOut,
-              transition: { type: "fade" as const, duration: endFadeOut },
+              duration: endFadeOut + (outro ? outroDuration : 0),
+              transition:
+                endFadeOut > 0
+                  ? { type: "fade" as const, duration: endFadeOut }
+                  : undefined,
               background: { type: "color" as const, color: "#000000" },
-              layers: [],
+              layers: outro
+                ? [{ type: "image" as const, source: outro }]
+                : [],
             }),
           ]
         : []),

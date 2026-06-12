@@ -4,9 +4,10 @@ TikTok-style word-by-word subtitles on top of any video, driven entirely by prop
 
 ## Fns
 
-- **`subtitled-video`** (effie) — takes a `videoUrl`, the seconds of it to play (`videoDuration`), a `coverText` title, and a list of `cues` (`{ text, start, end }`); plays the video as the background (keeping its audio) and overlays one subtitle layer per cue. Word highlight timings are spread across each cue proportional to word length, or can be given exactly via `cues[].words` (e.g. from a Whisper transcript). An optional `introDuration` opens on the cover as a title card that crossfades into the video, and `endFadeOut` fades the picture and audio to black when `videoDuration` cuts the video short.
+- **`subtitled-video`** (effie) — takes a `videoUrl`, the seconds of it to play (`videoDuration`), a `coverText` title, and a list of `cues` (`{ text, start, end }`); plays the video as the background (keeping its audio) and overlays one subtitle layer per cue. Word highlight timings are spread across each cue proportional to word length, or can be given exactly via `cues[].words` (e.g. from a Whisper transcript). An optional `introDuration` opens on the cover as a title card that crossfades into the video; `endFadeOut` fades the picture and audio out when `videoDuration` cuts the video short — into the outro card if `outroText` is set, to black otherwise.
 - **`subtitle-cue`** (annie) — one caption phrase as transparent PNG frames, popping the word currently being spoken onto its highlight pill.
 - **`subtitle-cover`** (image) — the cover, doubling as the intro title card. It shares the captions' palette and typeface but is deliberately not styled like a caption (mixed case, no outline or pill), with an optional `kicker` line for attribution and an accent rule in the highlight color.
+- **`subtitle-outro`** (image) — closing card: one quiet attribution/credit line on the same gradient, so the video ends on the brand look instead of a black frame.
 
 The look itself — style props with their defaults and the `CaptionOverlay` component — lives in [`app/captions.tsx`](./app/captions.tsx), shared by all three fns. Restyle via props (`highlightColor`, `fontSize`, `verticalPosition`, …) without touching code.
 
