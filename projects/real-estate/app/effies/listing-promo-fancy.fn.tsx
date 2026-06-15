@@ -102,25 +102,40 @@ export const previewProps: ListingPromoProps = {
 };
 
 const FPS = 60;
+// One swipe's worth of overlap: the slide duration, and the lead-in/tail each
+// scene shares with its neighbour. Also the realtor crossfade length.
 const TRANSITION_DURATION = 1.5;
+// Default on-screen seconds per photo when a scene sets no explicit duration.
 const PHOTO_DURATION = 5;
+// Pan travel (fraction of frame width) and the crop zoom that makes room for
+// it, tuned together so a photo's pan accelerates up to the swipe's speed by
+// the hand-off (see panParams) with enough slack to pan that far.
+const PAN_DISTANCE = 0.62;
+const PAN_OVERSIZE = 1.25;
+const REALTOR_DURATION = 5;
+// Quiet hold on the finished card before the video ends; the annie keeps
+// breathing (ken burns, drift) through it, so it spans these frames too.
+const REALTOR_HOLD = 2;
 
-// Every photo pans at the same apparent speed: PAN_DISTANCE is the travel
-// budget for a reference pan (a default-length photo with one swipe hold),
-// and photos whose pan is squeezed between two holds travel proportionally
-// less instead of hurrying — a fast scroll on one photo sticks out badly.
-// Returns the hold fractions alongside since they determine the active span.
-// `endsHeld` marks photos whose pan must complete TRANSITION_DURATION early:
-// scene-last photos before a cut (the held tail is replayed by the next
-// segment's slide-out copy) and the very last photo (held under the realtor
-// fade, whose card backdrop continues from the same crop).
+// Pan timing for one photo. Every photo pans at the same apparent SPEED:
+// `distance` scales linearly with active (un-held) pan time, so distance/time
+// stays constant however long the photo is on screen — a longer pan travels
+// proportionally further, not slower. That even speed is what lets each pan
+// accelerate up to the swipe's (constant) speed at the hand-off.
+//
+// The pan also holds — stays put — at the start while the photo slides into
+// view, and for `endsHeld` photos at the end too: scene-last photos before a
+// cut (their held tail is replayed by the next segment's slide-out copy) and
+// the very last photo (held under the realtor fade, whose backdrop continues
+// the same crop). The start hold runs one frame past the slide-in so the pan's
+// first step doesn't share a frame with the slide's last step and spike.
 function panParams(
   photoDuration: number,
   hasEntrySwipe: boolean,
   endsHeld: boolean,
 ) {
   const holdFractionStart = hasEntrySwipe
-    ? TRANSITION_DURATION / photoDuration
+    ? (TRANSITION_DURATION + 1 / FPS) / photoDuration
     : 0;
   const holdFractionEnd = endsHeld ? TRANSITION_DURATION / photoDuration : 0;
   const activeDuration =
@@ -129,15 +144,9 @@ function panParams(
   return {
     holdFractionStart,
     holdFractionEnd,
-    distance: PAN_DISTANCE * Math.min(1, activeDuration / referenceDuration),
+    distance: PAN_DISTANCE * (activeDuration / referenceDuration),
   };
 }
-const REALTOR_DURATION = 5;
-// Quiet hold on the finished card before the video ends; the annie keeps
-// breathing (ken burns, drift) through it, so it spans these frames too.
-const REALTOR_HOLD = 2;
-const PAN_DISTANCE = 0.5;
-const PAN_OVERSIZE = 1.0;
 
 export async function runner({
   props: { scenes, realtor },
@@ -155,35 +164,26 @@ export async function runner({
   const lastSceneImageUrl =
     lastScene.imageUrls[lastScene.imageUrls.length - 1];
 
-  // One segment per scene so each can carry its own audio (e.g. a voice
-  // over), but every photo swipe — within a scene and across scenes alike —
-  // is mimicked with layer motion rather than an effie segment transition.
-  // The built-in slide transition ends at full speed (its easing is fixed),
-  // which reads as a small lurch when it hands off to the gentle photo pan;
-  // layer-motion slides land softly. So scene segments butt-join with a hard
-  // cut, and the incoming segment opens by sliding its first photo in over a
-  // static copy of the previous scene's last photo — frames line up across
-  // the cut, making it invisible. Pills are gone before each cut (fade-out)
-  // and the new set enters only after the swipe settles, so nothing else
-  // needs to straddle the boundary.
+  // One segment per scene (so each can carry its own voice-over), but every
+  // photo swipe — within a scene and across scenes alike — is mimicked with
+  // layer motion rather than an effie segment transition: the built-in slide
+  // ends at full speed and lurches into the gentle photo pan, whereas a layer
+  // slide hands off to the pan smoothly. Scenes butt-join with a hard cut, and
+  // the incoming segment opens by sliding its first photo in over a static
+  // copy of the previous scene's last photo, so the cut frame matches and is
+  // invisible. Pills fade out before each cut and the next set enters only
+  // after the swipe settles, so nothing else straddles the boundary.
   //
-  // Each non-last scene's segment is one swipe shorter than its content
-  // clock: its last photo finishes panning TRANSITION_DURATION early (the
-  // end-hold below) and that held tail is replayed by the next segment's
-  // slide-out copy instead of being played out here. This reproduces the
-  // overlap an effie transition would have given, so cuts, voice-over
-  // starts, and total runtime land on the same timestamps as a
-  // transition-based timeline (keeping e.g. music alignment unchanged).
-  // A scene's photos share its content clock, which extends one swipe past
-  // the segment for non-last scenes — that replayed tail lives in the next
-  // segment's opening swipe. The clock is split so each photo gets the same
-  // ACTIVE pan time, not the same total time: a photo pinned under more
-  // swipe holds (a scene-last photo is held while sliding in AND while
-  // being replayed sliding out) gets proportionally more clock, so panning
-  // pace and travel stay even across the scene. Photo boundaries are
-  // snapped to whole frames so the annies line up with their layer windows.
-  // Computed up front because each segment also needs its predecessor's
-  // photo timing for the replay.
+  // Timing is computed up front because each segment's opening swipe replays
+  // its predecessor's last photo and so needs that photo's timing. A non-last
+  // scene's content clock runs one swipe past its segment — the last photo
+  // finishes panning a swipe early and that held tail is replayed by the next
+  // segment — which keeps cuts, voice-overs and total runtime on the same
+  // timestamps a transition-based timeline would give, so the music stays
+  // aligned. The clock is split so every photo gets the same ACTIVE pan time,
+  // not the same total time: a photo pinned under more holds gets more clock,
+  // keeping the pan pace even. Boundaries snap to whole frames so each annie
+  // lines up with its layer window.
   const sceneTimings = scenes.map((scene, sceneIdx) => {
     const isLastScene = sceneIdx === scenes.length - 1;
     const segmentDuration =
@@ -192,30 +192,34 @@ export async function runner({
         (isLastScene ? 0 : TRANSITION_DURATION);
     const contentDuration =
       segmentDuration + (isLastScene ? 0 : TRANSITION_DURATION);
-    const photoHolds = scene.imageUrls.map((_, photoIdx) => {
+    const photoMeta = scene.imageUrls.map((_, photoIdx) => {
       const hasEntrySwipe = !(sceneIdx === 0 && photoIdx === 0);
       const endsHeld = photoIdx === scene.imageUrls.length - 1;
-      return (
+      const holds =
         (hasEntrySwipe ? TRANSITION_DURATION : 0) +
-        (endsHeld ? TRANSITION_DURATION : 0)
-      );
+        (endsHeld ? TRANSITION_DURATION : 0);
+      return { hasEntrySwipe, endsHeld, holds };
     });
-    const totalHolds = photoHolds.reduce((sum, holds) => sum + holds, 0);
+    const totalHolds = photoMeta.reduce((sum, m) => sum + m.holds, 0);
     const activeShare =
       (contentDuration - totalHolds) / scene.imageUrls.length;
     let boundary = 0;
     let prevBoundaryFrame = 0;
-    const photos = photoHolds.map((holds) => {
+    const photos = photoMeta.map(({ hasEntrySwipe, endsHeld, holds }) => {
       boundary += activeShare + holds;
       const boundaryFrame = Math.round(boundary * FPS);
       const frameCount = Math.max(1, boundaryFrame - prevBoundaryFrame);
-      const photo = {
-        entry: prevBoundaryFrame / FPS,
-        frameCount,
-        duration: frameCount / FPS,
-      };
+      const entry = prevBoundaryFrame / FPS;
+      const duration = frameCount / FPS;
       prevBoundaryFrame = boundaryFrame;
-      return photo;
+      // Pan params live with the timing so the slide-out copies and the
+      // realtor backdrop can read a photo's pan distance without recomputing.
+      return {
+        entry,
+        frameCount,
+        duration,
+        ...panParams(duration, hasEntrySwipe, endsHeld),
+      };
     });
     return { segmentDuration, photos };
   });
@@ -230,11 +234,16 @@ export async function runner({
       const photoLayers = (
         await Promise.all(
           scene.imageUrls.map(async (imageUrl, photoIdx) => {
-            const isFirstPhoto = photoIdx === 0;
             const isLastPhoto = photoIdx === scene.imageUrls.length - 1;
-            const isVeryFirstPhoto = isFirstScene && isFirstPhoto;
-            const { entry, frameCount, duration } = photoTimings[photoIdx];
-            const pan = panParams(duration, !isVeryFirstPhoto, isLastPhoto);
+            const isVeryFirstPhoto = isFirstScene && photoIdx === 0;
+            const {
+              entry,
+              frameCount,
+              duration,
+              distance,
+              holdFractionStart,
+              holdFractionEnd,
+            } = photoTimings[photoIdx];
 
             const restLayer = {
               type: "animation" as const,
@@ -244,27 +253,25 @@ export async function runner({
                 {
                   imageUrl,
                   frameCount,
-                  distance: pan.distance,
+                  distance,
                   oversize: PAN_OVERSIZE,
-                  // easeOutIn finishes hot, which is right for every pan
-                  // that hands off to a swipe — but the very last photo's
-                  // pan ends in rest under the realtor fade, so it
-                  // decelerates to a standstill instead of slamming to one.
-                  easing: isLastScene && isLastPhoto ? "easeOut" : "easeOutIn",
-                  // The pan holds while the photo slides into view and only
-                  // then starts moving; the very first photo of the video has
-                  // no incoming swipe, so it pans from the start. Photos pan
-                  // right up to their hand-off — the static slideOutLayer
-                  // (or, across a scene cut, the next segment's copy of it)
-                  // picks up at progress=1, one pan step ahead, so motion
-                  // stays continuous. Last-of-scene photos finish early: the
-                  // segment ends (and the layer is clipped) at the start of
-                  // what would be their end-hold, whose held frames the next
-                  // segment replays as its slide-out copy. The very last
-                  // photo holds through the realtor fade instead, and the
-                  // card's backdrop picks up its exact final crop.
-                  holdFractionStart: pan.holdFractionStart,
-                  holdFractionEnd: pan.holdFractionEnd,
+                  // easeOutIn: the photo arrives still moving from the swipe,
+                  // eases to a slow mid-pan, then speeds back up to match the
+                  // swipe's speed at the next hand-off — one continuous
+                  // velocity through pan → swipe → pan. The very last photo
+                  // instead uses easeOutCubic: it still starts at the swipe's
+                  // speed (so its arrival matches, like the rest) but then
+                  // decelerates all the way to a standstill, since it hands off
+                  // to the realtor fade — which continues its crop from rest —
+                  // rather than to another swipe.
+                  easing:
+                    isLastScene && isLastPhoto ? "easeOutCubic" : "easeOutIn",
+                  // Holds (from panParams) keep the photo still while it slides
+                  // in and out; in between it pans right up to the hand-off,
+                  // where the static slide-out copy picks up at progress=1 and
+                  // carries the motion on.
+                  holdFractionStart,
+                  holdFractionEnd,
                 } satisfies PanningPhotoProps,
                 { width, height },
               ),
@@ -277,6 +284,8 @@ export async function runner({
                     motion: {
                       type: "slide" as const,
                       direction: "left" as const,
+                      // Linear, so the swipe holds the constant speed the pan
+                      // accelerates up to and then carries on from.
                       start: 0,
                       duration: TRANSITION_DURATION,
                     },
@@ -292,9 +301,9 @@ export async function runner({
                 "panned-photo",
                 {
                   imageUrl,
-                  // Same scaled distance as the photo's own pan, so this
-                  // frozen copy sits exactly where the pan left off.
-                  distance: pan.distance,
+                  // The photo's own pan distance, so this frozen copy sits
+                  // exactly where the pan left off.
+                  distance,
                   oversize: PAN_OVERSIZE,
                   progress: 1,
                 } satisfies PannedPhotoProps,
@@ -319,11 +328,11 @@ export async function runner({
         )
       ).flat();
 
-      // The first 1.5s of a non-first segment replay the previous scene's
-      // exit: a static copy of its last photo (at its final pan position —
-      // computed with that photo's own pan params, so the cut frame matches
-      // the previous segment's last frame exactly) slides out while this
-      // scene's first photo slides in on top.
+      // A non-first segment opens by replaying the previous scene's exit: a
+      // static copy of its last photo, frozen at that photo's final pan
+      // position, slides out while this scene's first photo slides in on top.
+      // Reusing the stored pan distance keeps the cut frame matching the
+      // previous segment's last frame exactly.
       const prevSceneSlideOutLayers = prevScene
         ? [
             {
@@ -333,13 +342,10 @@ export async function runner({
                 "panned-photo",
                 {
                   imageUrl: prevScene.imageUrls[prevScene.imageUrls.length - 1],
-                  distance: panParams(
+                  distance:
                     sceneTimings[sceneIdx - 1].photos[
                       prevScene.imageUrls.length - 1
-                    ].duration,
-                    !(sceneIdx - 1 === 0 && prevScene.imageUrls.length === 1),
-                    true,
-                  ).distance,
+                    ].distance,
                   oversize: PAN_OVERSIZE,
                   progress: 1,
                 } satisfies PannedPhotoProps,
@@ -466,13 +472,10 @@ export async function runner({
                 // the backdrop doesn't move or jump across the fade.
                 backdropUrl: lastSceneImageUrl,
                 backdropPan: {
-                  distance: panParams(
+                  distance:
                     sceneTimings[sceneTimings.length - 1].photos[
                       lastScene.imageUrls.length - 1
-                    ].duration,
-                    !(scenes.length === 1 && lastScene.imageUrls.length === 1),
-                    true,
-                  ).distance,
+                    ].distance,
                   oversize: PAN_OVERSIZE,
                 },
                 totalFrameCount: realtorFrameCount,
