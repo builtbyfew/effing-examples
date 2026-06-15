@@ -11,20 +11,20 @@ importers:
   projects/holiday-rentals:
     dependencies:
       '@effing/annie':
-        specifier: ^0.37.1
-        version: 0.37.1(zod@3.25.76)
+        specifier: ^0.38.0
+        version: 0.38.0(zod@3.25.76)
       '@effing/canvas':
-        specifier: ^0.37.1
-        version: 0.37.1(@napi-rs/canvas@0.1.100)(csstype@3.2.3)(react@19.2.7)
+        specifier: ^0.38.0
+        version: 0.38.0(@napi-rs/canvas@0.1.100)(csstype@3.2.3)(react@19.2.7)
       '@effing/effie':
-        specifier: ^0.37.1
-        version: 0.37.1(zod@3.25.76)
+        specifier: ^0.38.0
+        version: 0.38.0(zod@3.25.76)
       '@effing/fn':
-        specifier: ^0.37.1
-        version: 0.37.1(zod@3.25.76)
+        specifier: ^0.38.0
+        version: 0.38.0(zod@3.25.76)
       '@effing/tween':
-        specifier: ^0.37.1
-        version: 0.37.1
+        specifier: ^0.38.0
+        version: 0.38.0
       react:
         specifier: ^19.0.0
         version: 19.2.7
@@ -36,11 +36,11 @@ importers:
         version: 3.25.76
     devDependencies:
       '@effing/dev':
-        specifier: ^0.37.1
-        version: 0.37.1(@types/node@25.6.0)(typescript@5.9.3)
+        specifier: ^0.38.0
+        version: 0.38.0(@types/node@25.6.0)(typescript@5.9.3)
       '@effing/ffs':
-        specifier: ^0.37.1
-        version: 0.37.1
+        specifier: ^0.38.0
+        version: 0.38.0
       '@types/node':
         specifier: ^25.0.3
         version: 25.6.0
@@ -57,20 +57,20 @@ importers:
   projects/meme-generation:
     dependencies:
       '@effing/annie':
-        specifier: ^0.37.1
-        version: 0.37.1(zod@3.25.76)
+        specifier: ^0.38.0
+        version: 0.38.0(zod@3.25.76)
       '@effing/canvas':
-        specifier: ^0.37.1
-        version: 0.37.1(@napi-rs/canvas@0.1.100)(csstype@3.2.3)(react@19.2.7)
+        specifier: ^0.38.0
+        version: 0.38.0(@napi-rs/canvas@0.1.100)(csstype@3.2.3)(react@19.2.7)
       '@effing/effie':
-        specifier: ^0.37.1
-        version: 0.37.1(zod@3.25.76)
+        specifier: ^0.38.0
+        version: 0.38.0(zod@3.25.76)
       '@effing/fn':
-        specifier: ^0.37.1
-        version: 0.37.1(zod@3.25.76)
+        specifier: ^0.38.0
+        version: 0.38.0(zod@3.25.76)
       '@effing/tween':
-        specifier: ^0.37.1
-        version: 0.37.1
+        specifier: ^0.38.0
+        version: 0.38.0
       react:
         specifier: ^19.0.0
         version: 19.2.7
@@ -82,11 +82,11 @@ importers:
         version: 3.25.76
     devDependencies:
       '@effing/dev':
-        specifier: ^0.37.1
-        version: 0.37.1(@types/node@25.6.0)(typescript@5.9.3)
+        specifier: ^0.38.0
+        version: 0.38.0(@types/node@25.6.0)(typescript@5.9.3)
       '@effing/ffs':
-        specifier: ^0.37.1
-        version: 0.37.1
+        specifier: ^0.38.0
+        version: 0.38.0
       '@types/node':
         specifier: ^25.0.3
         version: 25.6.0
@@ -103,20 +103,20 @@ importers:
   projects/real-estate:
     dependencies:
       '@effing/annie':
-        specifier: ^0.37.1
-        version: 0.37.1(zod@3.25.76)
+        specifier: ^0.38.0
+        version: 0.38.0(zod@3.25.76)
       '@effing/canvas':
-        specifier: ^0.37.1
-        version: 0.37.1(@napi-rs/canvas@0.1.100)(csstype@3.2.3)(react@19.2.7)
+        specifier: ^0.38.0
+        version: 0.38.0(@napi-rs/canvas@0.1.100)(csstype@3.2.3)(react@19.2.7)
       '@effing/effie':
-        specifier: ^0.37.1
-        version: 0.37.1(zod@3.25.76)
+        specifier: ^0.38.0
+        version: 0.38.0(zod@3.25.76)
       '@effing/fn':
-        specifier: ^0.37.1
-        version: 0.37.1(zod@3.25.76)
+        specifier: ^0.38.0
+        version: 0.38.0(zod@3.25.76)
       '@effing/tween':
-        specifier: ^0.37.1
-        version: 0.37.1
+        specifier: ^0.38.0
+        version: 0.38.0
       react:
         specifier: ^19.0.0
         version: 19.2.7
@@ -128,11 +128,11 @@ importers:
         version: 3.25.76
     devDependencies:
       '@effing/dev':
-        specifier: ^0.37.1
-        version: 0.37.1(@types/node@25.6.0)(typescript@5.9.3)
+        specifier: ^0.38.0
+        version: 0.38.0(@types/node@25.6.0)(typescript@5.9.3)
       '@effing/ffs':
-        specifier: ^0.37.1
-        version: 0.37.1
+        specifier: ^0.38.0
+        version: 0.38.0
       '@types/node':
         specifier: ^25.0.3
         version: 25.6.0
@@ -149,20 +149,20 @@ importers:
   projects/retail:
     dependencies:
       '@effing/annie':
-        specifier: ^0.37.1
-        version: 0.37.1(zod@3.25.76)
+        specifier: ^0.38.0
+        version: 0.38.0(zod@3.25.76)
       '@effing/canvas':
-        specifier: ^0.37.1
-        version: 0.37.1(@napi-rs/canvas@0.1.100)(csstype@3.2.3)(react@19.2.7)
+        specifier: ^0.38.0
+        version: 0.38.0(@napi-rs/canvas@0.1.100)(csstype@3.2.3)(react@19.2.7)
       '@effing/effie':
-        specifier: ^0.37.1
-        version: 0.37.1(zod@3.25.76)
+        specifier: ^0.38.0
+        version: 0.38.0(zod@3.25.76)
       '@effing/fn':
-        specifier: ^0.37.1
-        version: 0.37.1(zod@3.25.76)
+        specifier: ^0.38.0
+        version: 0.38.0(zod@3.25.76)
       '@effing/tween':
-        specifier: ^0.37.1
-        version: 0.37.1
+        specifier: ^0.38.0
+        version: 0.38.0
       react:
         specifier: ^19.0.0
         version: 19.2.7
@@ -174,11 +174,11 @@ importers:
         version: 3.25.76
     devDependencies:
       '@effing/dev':
-        specifier: ^0.37.1
-        version: 0.37.1(@types/node@25.6.0)(typescript@5.9.3)
+        specifier: ^0.38.0
+        version: 0.38.0(@types/node@25.6.0)(typescript@5.9.3)
       '@effing/ffs':
-        specifier: ^0.37.1
-        version: 0.37.1
+        specifier: ^0.38.0
+        version: 0.38.0
       '@types/node':
         specifier: ^25.0.3
         version: 25.6.0
@@ -195,20 +195,20 @@ importers:
   projects/subtitles:
     dependencies:
       '@effing/annie':
-        specifier: ^0.37.1
-        version: 0.37.1(zod@3.25.76)
+        specifier: ^0.38.0
+        version: 0.38.0(zod@3.25.76)
       '@effing/canvas':
-        specifier: ^0.37.1
-        version: 0.37.1(@napi-rs/canvas@0.1.100)(csstype@3.2.3)(react@19.2.7)
+        specifier: ^0.38.0
+        version: 0.38.0(@napi-rs/canvas@0.1.100)(csstype@3.2.3)(react@19.2.7)
       '@effing/effie':
-        specifier: ^0.37.1
-        version: 0.37.1(zod@3.25.76)
+        specifier: ^0.38.0
+        version: 0.38.0(zod@3.25.76)
       '@effing/fn':
-        specifier: ^0.37.1
-        version: 0.37.1(zod@3.25.76)
+        specifier: ^0.38.0
+        version: 0.38.0(zod@3.25.76)
       '@effing/tween':
-        specifier: ^0.37.1
-        version: 0.37.1
+        specifier: ^0.38.0
+        version: 0.38.0
       react:
         specifier: ^19.0.0
         version: 19.2.7
@@ -220,11 +220,11 @@ importers:
         version: 3.25.76
     devDependencies:
       '@effing/dev':
-        specifier: ^0.37.1
-        version: 0.37.1(@types/node@25.6.0)(typescript@5.9.3)
+        specifier: ^0.38.0
+        version: 0.38.0(@types/node@25.6.0)(typescript@5.9.3)
       '@effing/ffs':
-        specifier: ^0.37.1
-        version: 0.37.1
+        specifier: ^0.38.0
+        version: 0.38.0
       '@types/node':
         specifier: ^25.0.3
         version: 25.6.0
@@ -241,20 +241,20 @@ importers:
   projects/weather-forecast:
     dependencies:
       '@effing/annie':
-        specifier: ^0.37.1
-        version: 0.37.1(zod@3.25.76)
+        specifier: ^0.38.0
+        version: 0.38.0(zod@3.25.76)
       '@effing/canvas':
-        specifier: ^0.37.1
-        version: 0.37.1(@napi-rs/canvas@0.1.100)(csstype@3.2.3)(react@19.2.7)
+        specifier: ^0.38.0
+        version: 0.38.0(@napi-rs/canvas@0.1.100)(csstype@3.2.3)(react@19.2.7)
       '@effing/effie':
-        specifier: ^0.37.1
-        version: 0.37.1(zod@3.25.76)
+        specifier: ^0.38.0
+        version: 0.38.0(zod@3.25.76)
       '@effing/fn':
-        specifier: ^0.37.1
-        version: 0.37.1(zod@3.25.76)
+        specifier: ^0.38.0
+        version: 0.38.0(zod@3.25.76)
       '@effing/tween':
-        specifier: ^0.37.1
-        version: 0.37.1
+        specifier: ^0.38.0
+        version: 0.38.0
       react:
         specifier: ^19.0.0
         version: 19.2.7
@@ -266,11 +266,11 @@ importers:
         version: 3.25.76
     devDependencies:
       '@effing/dev':
-        specifier: ^0.37.1
-        version: 0.37.1(@types/node@25.6.0)(typescript@5.9.3)
+        specifier: ^0.38.0
+        version: 0.38.0(@types/node@25.6.0)(typescript@5.9.3)
       '@effing/ffs':
-        specifier: ^0.37.1
-        version: 0.37.1
+        specifier: ^0.38.0
+        version: 0.38.0
       '@types/node':
         specifier: ^25.0.3
         version: 25.6.0
@@ -543,24 +543,24 @@ packages:
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
 
-  '@effing/annie-player@0.37.1':
-    resolution: {integrity: sha512-AbSsmiCoWQaMtVEB9kMadyDReNwR059D2TEHcLL4fwgA2Ix8eMtr+0nAi0cp/1rS1/bmmc1tk8u5VwUxMoU8Ew==}
+  '@effing/annie-player@0.38.0':
+    resolution: {integrity: sha512-6cB344X/zFhUKYJSJnAJw8+8QiUAcG7v8nrhumCuTI31kmPgLzzAftVnhV0vrhWWe5DwrTiO6ntTImBil1+3Ww==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
     peerDependenciesMeta:
       react:
         optional: true
 
-  '@effing/annie@0.37.1':
-    resolution: {integrity: sha512-sikZveVueGP7uHEmbZFoDCyJMEW55mZuei9oS1FczYS9pzyIUFsh2QDGP8QBVRCncoYslPkKBGbGbu+Lezxffg==}
+  '@effing/annie@0.38.0':
+    resolution: {integrity: sha512-ns+uH5EscESQ5i4hG82hO0tk0KrmFaGzr8e5uowHWr7qyery/0vfv7cQ0pSTYXGRyfJ7g6ETzKifKOWZXCT07A==}
     peerDependencies:
       zod: ^3.0.0
     peerDependenciesMeta:
       zod:
         optional: true
 
-  '@effing/canvas@0.37.1':
-    resolution: {integrity: sha512-Gy9wKQ49hL09t6VGsQ4q4KSHrZ5cDNTN+rxDfWS0xstml4RGBgKOHLEatTJQnBxbbSI52hVVMCUh4PN2yyxYZg==}
+  '@effing/canvas@0.38.0':
+    resolution: {integrity: sha512-qcvB5y+IAUnrqEo0vyJ2Ai5gQ8C5MEkFGOxUfT4IutOeRpTY37/JHpxRkrJNwZP2tmoxBWAsioTamdrDQo/0wQ==}
     peerDependencies:
       '@napi-rs/canvas': '>=0.1.50'
       csstype: '>=3.2.0'
@@ -571,44 +571,44 @@ packages:
       react:
         optional: true
 
-  '@effing/dev@0.37.1':
-    resolution: {integrity: sha512-dD8jtivGsUa09tt/EZD8GQ5peNBHvC/NpFtEPZNY1xwlEYMrg7LmHbws0VlbhmsIJLbSweH/5e26nL1SHoPARw==}
+  '@effing/dev@0.38.0':
+    resolution: {integrity: sha512-/yy8ULsNrGL9VN0uP3Kcgz6s3Ov1HQMkBr52lLq/m/SEToECW38xgyBnLtNMBSliFSFtcsGr2t+YccNWib2d6A==}
     engines: {node: '>=22'}
     hasBin: true
 
-  '@effing/effie-preview@0.37.1':
-    resolution: {integrity: sha512-q0UPUz/gXRq/YzLJDRn9z/+g69IfCvcIuxJ1FWnXdQRM7szPMWjkVmrh9SxSx+pGdiQxtaEqblG/lIc4NfAjQg==}
+  '@effing/effie-preview@0.38.0':
+    resolution: {integrity: sha512-bavvIqyjLrj2WAJCdMMzLAafnHPp1lNVaiA9MZ3fgVWcDHxLPWEuC6g/XwEOoiYCrc8tTI7pK0yB9WEG4hto1w==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
     peerDependenciesMeta:
       react:
         optional: true
 
-  '@effing/effie@0.37.1':
-    resolution: {integrity: sha512-TuFaGMdUIZUhaJndJKSD7a81M3yzAcqhBAiCvSBjLraucTH8YQIv2+WQB9OXSPWjc0ztkuvMVOCK7arK1a5weQ==}
+  '@effing/effie@0.38.0':
+    resolution: {integrity: sha512-Yir/sGC+u+8WilshzXJeN9nuJCnp6nJFwTJGnSTYRND6kx+79zSu5kU5Y6XmWfZHjKdCZ6e5RW4KYASkDUu9Cw==}
     peerDependencies:
       zod: ^3.0.0
     peerDependenciesMeta:
       zod:
         optional: true
 
-  '@effing/ffmpeg@0.37.1':
-    resolution: {integrity: sha512-Zb8oYUJtOWIj2DQNAKhv+SDgSGmk4lea2qo97SWLLkFERfeIGkS6htjQu139N3gmVDcvbCFgQ4o4eXt7ryBOHA==}
+  '@effing/ffmpeg@0.38.0':
+    resolution: {integrity: sha512-HwIpCuqZryDIhe9lzskcI2ZL3y/j+BNhqIL0Lk+WsUaKQ9cyxUkkb/MBHHc3jcyNz+yqmnUiK7N7W/Vl3ylO7w==}
 
-  '@effing/ffs@0.37.1':
-    resolution: {integrity: sha512-wNdVI/nzVUkyLu8AzkWvDcyYyQxtaFunhG0ApIEF57Z+Utxt3sF5/w0LvDVYkm4TC5WgbOM9IVvd89seqelJVA==}
+  '@effing/ffs@0.38.0':
+    resolution: {integrity: sha512-e/4L3GLe6pi+oOxFWvQYJdu3XePBB8qq4QmQ2/Ftlu21EbLR/kqox+zKo2yy9RKH3EfiFjbdJYGQWZnMj4rOOg==}
     hasBin: true
 
-  '@effing/fn@0.37.1':
-    resolution: {integrity: sha512-MgfzN4kg17Iwydf02V6osgM8jtmO/XqoDocFJL1bB351xWwfP5gmLRojsBzbpGDMUiu2ZTBAum5IXcEFfKseag==}
+  '@effing/fn@0.38.0':
+    resolution: {integrity: sha512-UjlQvznKPRSxHf0Zy808QT9SeI8wDCFZENS3ser8DGIiKS2+rsr116b+3XuqBnVZJ30NGSwFZHGcjVXPYIrJCg==}
     peerDependencies:
       zod: ^3.0.0
 
-  '@effing/serde@0.37.1':
-    resolution: {integrity: sha512-koMrl0mPHWfrVyJ1beJyFgWBhnn2UEpEcT8/SKhwCw5sRv8tgFrApwJGxszcGKbRIm6k+SbEAWGYc+PgpTR4JQ==}
+  '@effing/serde@0.38.0':
+    resolution: {integrity: sha512-1o3LH/S9aa1GAbfvxziXnPkv26oB6sv5YIcRp43d+Ff4+6YOymFpoXLGv2UEGBIoSau7XDbHcHaXVqoxENizEQ==}
 
-  '@effing/tween@0.37.1':
-    resolution: {integrity: sha512-yzN0PyGrmgHheXswmVa6o0dDiFhF1ybNVr1GszIIXo4lq6j7dozbjE8D+zbt44CiTTqXSUa4klLOiLq8DsZh0g==}
+  '@effing/tween@0.38.0':
+    resolution: {integrity: sha512-+0HHkUEUTyOveYuZ8bLFysoc9dMTZggjvVYbSj+8zAKahxBLPYOAEJJY7VpE7KWVX1WgeS0LG6blgmLE5+4YNQ==}
 
   '@emnapi/runtime@1.10.0':
     resolution: {integrity: sha512-ewvYlk86xUoGI0zQRNq/mC+16R1QeDlKQy21Ki3oSYXNgLb45GV1P6A0M+/s6nyCuNDqe5VpaY84BzXGwVbwFA==}
@@ -2578,17 +2578,17 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
-  '@effing/annie-player@0.37.1(react@19.2.7)':
+  '@effing/annie-player@0.38.0(react@19.2.7)':
     dependencies:
       '@andrewbranch/untar.js': 1.0.3
     optionalDependencies:
       react: 19.2.7
 
-  '@effing/annie@0.37.1(zod@3.25.76)':
+  '@effing/annie@0.38.0(zod@3.25.76)':
     optionalDependencies:
       zod: 3.25.76
 
-  '@effing/canvas@0.37.1(@napi-rs/canvas@0.1.100)(csstype@3.2.3)(react@19.2.7)':
+  '@effing/canvas@0.38.0(@napi-rs/canvas@0.1.100)(csstype@3.2.3)(react@19.2.7)':
     dependencies:
       '@napi-rs/canvas': 0.1.100
       css-background-parser: 0.1.0
@@ -2603,13 +2603,13 @@ snapshots:
       csstype: 3.2.3
       react: 19.2.7
 
-  '@effing/dev@0.37.1(@types/node@25.6.0)(typescript@5.9.3)':
+  '@effing/dev@0.38.0(@types/node@25.6.0)(typescript@5.9.3)':
     dependencies:
-      '@effing/annie-player': 0.37.1(react@19.2.7)
-      '@effing/effie': 0.37.1(zod@3.25.76)
-      '@effing/effie-preview': 0.37.1(react@19.2.7)(zod@3.25.76)
-      '@effing/fn': 0.37.1(zod@3.25.76)
-      '@effing/serde': 0.37.1
+      '@effing/annie-player': 0.38.0(react@19.2.7)
+      '@effing/effie': 0.38.0(zod@3.25.76)
+      '@effing/effie-preview': 0.38.0(react@19.2.7)(zod@3.25.76)
+      '@effing/fn': 0.38.0(zod@3.25.76)
+      '@effing/serde': 0.38.0
       '@react-router/dev': 7.15.1(@types/node@25.6.0)(react-router@7.15.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(typescript@5.9.3)(vite@7.3.3(@types/node@25.6.0))
       '@react-router/node': 7.15.1(react-router@7.15.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(typescript@5.9.3)
       commander: 13.1.0
@@ -2643,34 +2643,34 @@ snapshots:
       - wrangler
       - yaml
 
-  '@effing/effie-preview@0.37.1(react@19.2.7)(zod@3.25.76)':
+  '@effing/effie-preview@0.38.0(react@19.2.7)(zod@3.25.76)':
     dependencies:
-      '@effing/annie-player': 0.37.1(react@19.2.7)
-      '@effing/effie': 0.37.1(zod@3.25.76)
+      '@effing/annie-player': 0.38.0(react@19.2.7)
+      '@effing/effie': 0.38.0(zod@3.25.76)
     optionalDependencies:
       react: 19.2.7
     transitivePeerDependencies:
       - zod
 
-  '@effing/effie@0.37.1(zod@3.25.76)':
+  '@effing/effie@0.38.0(zod@3.25.76)':
     optionalDependencies:
       zod: 3.25.76
 
-  '@effing/ffmpeg@0.37.1':
+  '@effing/ffmpeg@0.38.0':
     optional: true
 
-  '@effing/ffs@0.37.1':
+  '@effing/ffs@0.38.0':
     dependencies:
       '@aws-sdk/client-s3': 3.1050.0
       '@aws-sdk/lib-storage': 3.1050.0(@aws-sdk/client-s3@3.1050.0)
-      '@effing/effie': 0.37.1(zod@3.25.76)
+      '@effing/effie': 0.38.0(zod@3.25.76)
       body-parser: 1.20.5
       express: 4.22.2
       tar-stream: 3.2.0
       undici: 7.25.0
       zod: 3.25.76
     optionalDependencies:
-      '@effing/ffmpeg': 0.37.1
+      '@effing/ffmpeg': 0.38.0
       sharp: 0.33.5
     transitivePeerDependencies:
       - bare-abort-controller
@@ -2678,16 +2678,16 @@ snapshots:
       - react-native-b4a
       - supports-color
 
-  '@effing/fn@0.37.1(zod@3.25.76)':
+  '@effing/fn@0.38.0(zod@3.25.76)':
     dependencies:
-      '@effing/annie': 0.37.1(zod@3.25.76)
-      '@effing/effie': 0.37.1(zod@3.25.76)
-      '@effing/serde': 0.37.1
+      '@effing/annie': 0.38.0(zod@3.25.76)
+      '@effing/effie': 0.38.0(zod@3.25.76)
+      '@effing/serde': 0.38.0
       zod: 3.25.76
 
-  '@effing/serde@0.37.1': {}
+  '@effing/serde@0.38.0': {}
 
-  '@effing/tween@0.37.1': {}
+  '@effing/tween@0.38.0': {}
 
   '@emnapi/runtime@1.10.0':
     dependencies:
