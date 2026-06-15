@@ -146,6 +146,52 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  projects/recruitment:
+    dependencies:
+      '@effing/annie':
+        specifier: ^0.38.0
+        version: 0.38.0(zod@3.25.76)
+      '@effing/canvas':
+        specifier: ^0.38.0
+        version: 0.38.0(@napi-rs/canvas@0.1.100)(csstype@3.2.3)(react@19.2.7)
+      '@effing/effie':
+        specifier: ^0.38.0
+        version: 0.38.0(zod@3.25.76)
+      '@effing/fn':
+        specifier: ^0.38.0
+        version: 0.38.0(zod@3.25.76)
+      '@effing/tween':
+        specifier: ^0.38.0
+        version: 0.38.0
+      react:
+        specifier: ^19.0.0
+        version: 19.2.7
+      tiny-invariant:
+        specifier: ^1.3.1
+        version: 1.3.3
+      zod:
+        specifier: ^3.25.76
+        version: 3.25.76
+    devDependencies:
+      '@effing/dev':
+        specifier: ^0.38.0
+        version: 0.38.0(@types/node@25.6.0)(typescript@5.9.3)
+      '@effing/ffs':
+        specifier: ^0.38.0
+        version: 0.38.0
+      '@types/node':
+        specifier: ^25.0.3
+        version: 25.6.0
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      effing-cloud:
+        specifier: ^0.5.0
+        version: 0.5.0
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   projects/retail:
     dependencies:
       '@effing/annie':
