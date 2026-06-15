@@ -4,6 +4,7 @@ import {
   linear,
   easeInSine,
   easeOutSine,
+  easeOutCubic,
   easeInOutSine,
   easeInQuint,
   easeOutQuint,
@@ -19,7 +20,14 @@ export const propsSchema = z.object({
   distance: z.number().optional(),
   oversize: z.number().min(1).optional(),
   easing: z
-    .enum(["linear", "easeIn", "easeOut", "easeInOut", "easeOutIn"])
+    .enum([
+      "linear",
+      "easeIn",
+      "easeOut",
+      "easeOutCubic",
+      "easeInOut",
+      "easeOutIn",
+    ])
     .optional(),
   holdFractionStart: z.number().min(0).max(1).optional(),
   holdFractionEnd: z.number().min(0).max(1).optional(),
@@ -48,6 +56,7 @@ const EASING_FNS = {
   linear,
   easeIn: easeInSine,
   easeOut: easeOutSine,
+  easeOutCubic,
   easeInOut: easeInOutSine,
   easeOutIn,
 };
@@ -70,7 +79,12 @@ export async function* runner({
   const ease = EASING_FNS[easing];
   const activeSpan = 1 - holdFractionStart - holdFractionEnd;
 
-  yield* tween(frameCount, async ({ lower: progress }) => {
+  // Sample each frame at its END edge so the final frame lands exactly on
+  // progress=1, matching the static panned-photo copy that takes over when
+  // this photo slides out (or is replayed across a scene cut). With the start
+  // edge the last frame stopped just short of 1, leaving the copy a sub-step
+  // ahead — a positional pop at the hand-off that grew with the pan distance.
+  yield* tween(frameCount, async ({ upper: progress }) => {
     const easedProgress =
       progress < holdFractionStart
         ? 0
