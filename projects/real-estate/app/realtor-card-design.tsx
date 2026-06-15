@@ -1,6 +1,7 @@
 import { easeOutBack } from "@effing/tween";
 import type { Image, SKRSContext2D } from "@effing/canvas";
 import { fontFamily } from "~/theme";
+import { computePanCrop } from "~/photo-pan";
 
 // Shared design system for the realtor sign-off card, used by both the
 // static image fn (app/images/realtor-card.fn.tsx, composed part-by-part by
@@ -189,6 +190,11 @@ export function computeLayout(width: number, height: number) {
   };
 }
 
+// When the card follows a panned listing photo, the backdrop can start from
+// that photo's exact final crop so a crossfade from it is seamless. Matches
+// the parameters of the panning-photo annie (direction "left", progress 1).
+export type BackdropPan = { distance: number; oversize: number };
+
 // Opaque base of the card: night fill, then the backdrop crop with its scrim
 // and vignette. Raw canvas ops on a pre-loaded image — an <img> in a React
 // tree would be re-fetched on every renderReactElement call.
@@ -198,34 +204,64 @@ export function drawBase(
   backdropImage: Image | null,
   zoom: number,
   fade: number,
+  pan?: BackdropPan,
 ) {
   const { width, height } = layout;
   ctx.fillStyle = noir.night;
   ctx.fillRect(0, 0, width, height);
   if (!backdropImage || fade <= 0) return;
 
-  // Cover crop scaled around a 50%/30% origin, so a ken-burns zoom drifts
-  // around the upper part of the photo where it stays visible longest.
   const iw = backdropImage.width;
   const ih = backdropImage.height;
-  const cover = Math.max(width / iw, height / ih);
-  const scale = cover * zoom;
-  const sw = width / scale;
-  const sh = height / scale;
-  const originX = (iw - width / cover) / 2 + (0.5 * width) / cover;
-  const originY = (ih - height / cover) / 2 + (0.3 * height) / cover;
   ctx.globalAlpha = fade;
-  ctx.drawImage(
-    backdropImage,
-    originX - 0.5 * sw,
-    originY - 0.3 * sh,
-    sw,
-    sh,
-    0,
-    0,
-    width,
-    height,
-  );
+  if (pan) {
+    // Base crop = where the preceding pan ended; the ken-burns zoom scales
+    // that crop in place (upper-biased like the default branch below), so
+    // zoom=1 reproduces the pan's final frame pixel-for-pixel.
+    const { sx, sy, sw, sh } = computePanCrop({
+      imageWidth: iw,
+      imageHeight: ih,
+      width,
+      height,
+      direction: "left",
+      distance: pan.distance,
+      oversize: pan.oversize,
+      progress: 1,
+    });
+    const zw = sw / zoom;
+    const zh = sh / zoom;
+    ctx.drawImage(
+      backdropImage,
+      sx + (sw - zw) * 0.5,
+      sy + (sh - zh) * 0.3,
+      zw,
+      zh,
+      0,
+      0,
+      width,
+      height,
+    );
+  } else {
+    // Cover crop scaled around a 50%/30% origin, so a ken-burns zoom drifts
+    // around the upper part of the photo where it stays visible longest.
+    const cover = Math.max(width / iw, height / ih);
+    const scale = cover * zoom;
+    const sw = width / scale;
+    const sh = height / scale;
+    const originX = (iw - width / cover) / 2 + (0.5 * width) / cover;
+    const originY = (ih - height / cover) / 2 + (0.3 * height) / cover;
+    ctx.drawImage(
+      backdropImage,
+      originX - 0.5 * sw,
+      originY - 0.3 * sh,
+      sw,
+      sh,
+      0,
+      0,
+      width,
+      height,
+    );
+  }
   ctx.globalAlpha = 1;
 
   const scrim = ctx.createLinearGradient(0, 0, 0, height);

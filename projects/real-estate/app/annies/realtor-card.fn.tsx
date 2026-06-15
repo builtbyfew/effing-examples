@@ -38,6 +38,16 @@ export const propsSchema = z.object({
   // Listing photo that bleeds into the card's backdrop; the slide falls back
   // to a plain dark backdrop with an ambient glow when omitted.
   backdropUrl: z.string().url().optional(),
+  // When the card fades in over that photo mid-pan, pass the pan's distance
+  // and oversize: the backdrop then starts from the pan's exact final crop
+  // (seamless crossfade) and only begins its ken-burns drift once the
+  // fade-in completes. Without it the backdrop uses its own centered crop.
+  backdropPan: z
+    .object({
+      distance: z.number(),
+      oversize: z.number().min(1),
+    })
+    .optional(),
   eyebrow: z.string().optional(),
   totalFrameCount: z.number().int().min(1),
   fadeInFrameCount: z.number().int().min(1).optional(),
@@ -70,6 +80,7 @@ export async function* runner({
     phone,
     email,
     backdropUrl,
+    backdropPan,
     eyebrow = DEFAULT_EYEBROW,
     totalFrameCount,
     fadeInFrameCount = 18,
@@ -105,8 +116,16 @@ export async function* runner({
       fadeInFrameCount,
       fps,
       height,
+      backdropFromPan: backdropPan != null,
     });
-    drawBase(ctx, layout, backdropImage, beats.kenBurns, beats.containerFade);
+    drawBase(
+      ctx,
+      layout,
+      backdropImage,
+      beats.kenBurns,
+      beats.containerFade,
+      backdropPan,
+    );
     await renderReactElement(
       ctx,
       <CardOverlay
@@ -149,11 +168,13 @@ function computeBeats(
     fadeInFrameCount,
     fps,
     height,
+    backdropFromPan,
   }: {
     totalFrameCount: number;
     fadeInFrameCount: number;
     fps: number;
     height: number;
+    backdropFromPan: boolean;
   },
 ) {
   const fpsScale = fps / 30;
@@ -167,7 +188,15 @@ function computeBeats(
     s,
     containerFade,
     liftY: (1 - containerFade) * Math.round(height * 0.015),
-    kenBurns: 1.08 + 0.07 * (frame / Math.max(1, totalFrameCount)),
+    // When the backdrop continues a pan (backdropFromPan), it must show the
+    // pan's exact final crop while the segment crossfade is still revealing
+    // the card — so the zoom starts at 1 and eases in from zero velocity
+    // (quadratic ramp): drift is imperceptible during the fade and the
+    // backdrop never lurches into motion. Standalone cards keep the original
+    // pre-zoomed linear drift.
+    kenBurns: backdropFromPan
+      ? 1 + 0.15 * Math.pow(frame / Math.max(1, totalFrameCount), 2)
+      : 1.08 + 0.07 * (frame / Math.max(1, totalFrameCount)),
     frameReveal: easeOutQuad(progress(frame, s(16), s(34))),
     glowReveal: easeOutQuad(progress(frame, s(8), s(30))),
     eyebrowReveal: easeOutQuart(progress(frame, s(14), s(20))),
