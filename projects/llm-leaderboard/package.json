@@ -1,5 +1,5 @@
 {
-  "name": "subtitles",
+  "name": "llm-leaderboard",
   "type": "module",
   "sideEffects": false,
   "scripts": {
