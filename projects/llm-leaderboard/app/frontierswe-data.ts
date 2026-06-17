@@ -1,4 +1,4 @@
-import type { LeaderboardRow } from "~/components/leaderboard";
+import type { LeaderboardRow } from "~/components/original-leaderboard";
 
 /**
  * The dataset behind the demo video: a coding-agent leaderboard scored two

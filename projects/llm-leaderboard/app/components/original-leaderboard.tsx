@@ -6,7 +6,7 @@ import { easeOutCubic, easeInOutCubic } from "@effing/tween";
  * renders the whole board — everything is authored in a fixed 1080×900 design
  * space and scaled uniformly to the requested bounds.
  *
- * Both the animated annie and the still cover render `<Leaderboard />`, so the
+ * Both the animated annie and the still cover render `<OriginalLeaderboard />`, so the
  * two always match: the annie sweeps `frame` across the timeline, the cover
  * pins it to a settled, held frame.
  *
@@ -28,10 +28,10 @@ export type LeaderboardRow = {
   fromRank?: number;
 };
 
-export type LeaderboardProps = {
+export type OriginalLeaderboardProps = {
   width: number;
   height: number;
-  /** Wordmark shown at the top, e.g. "FrontierSWE Leaderboard". */
+  /** Wordmark shown at the top, e.g. "FrontierSWE OriginalLeaderboard". */
   title: string;
   /** Benchmark label after the wordmark, e.g. "best@5". */
   metric: string;
@@ -104,7 +104,7 @@ function timeline(frameCount: number) {
   };
 }
 
-export function Leaderboard({
+export function OriginalLeaderboard({
   width,
   height,
   title,
@@ -114,7 +114,7 @@ export function Leaderboard({
   rows,
   frame,
   frameCount,
-}: LeaderboardProps): ReactElement {
+}: OriginalLeaderboardProps): ReactElement {
   const k = Math.min(width / DW, height / DH);
   const cell = 118 * k;
   const t = timeline(frameCount);

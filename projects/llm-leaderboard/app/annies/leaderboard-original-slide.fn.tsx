@@ -9,7 +9,7 @@ import {
   jetBrainsMonoExtraBold,
   loadFonts,
 } from "~/fonts";
-import { Leaderboard } from "~/components/leaderboard";
+import { OriginalLeaderboard } from "~/components/original-leaderboard";
 import { MEAN_SLIDE, TITLE } from "~/frontierswe-data";
 
 /**
@@ -31,7 +31,7 @@ const rowSchema = z.object({
 });
 
 export const propsSchema = z.object({
-  /** Wordmark shown at the top, e.g. "FrontierSWE Leaderboard". */
+  /** Wordmark shown at the top, e.g. "FrontierSWE OriginalLeaderboard". */
   title: z.string(),
   /** Benchmark label shown after the wordmark, e.g. "mean@5". */
   metric: z.string(),
@@ -45,9 +45,9 @@ export const propsSchema = z.object({
   frameCount: z.number().int().min(1).optional(),
 });
 
-export type LeaderboardSlideProps = z.infer<typeof propsSchema>;
+export type LeaderboardOriginalSlideProps = z.infer<typeof propsSchema>;
 
-export const previewProps: LeaderboardSlideProps = {
+export const previewProps: LeaderboardOriginalSlideProps = {
   title: TITLE,
   metric: MEAN_SLIDE.metric,
   valueLabel: MEAN_SLIDE.valueLabel,
@@ -58,7 +58,7 @@ export const previewProps: LeaderboardSlideProps = {
 export async function* runner({
   props: { title, metric, valueLabel = "avg rank", shareLabel, rows, frameCount = 150 },
   bounds: { width, height },
-}: RunnerArgs<LeaderboardSlideProps>): AnnieRunnerReturn {
+}: RunnerArgs<LeaderboardOriginalSlideProps>): AnnieRunnerReturn {
   const fonts = await loadFonts([
     jetBrainsMonoRegular,
     jetBrainsMonoMedium,
@@ -71,7 +71,7 @@ export async function* runner({
     const ctx = canvas.getContext("2d");
     await renderReactElement(
       ctx,
-      <Leaderboard
+      <OriginalLeaderboard
         width={width}
         height={height}
         title={title}

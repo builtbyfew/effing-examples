@@ -6,13 +6,13 @@ export default defineConfig({
   annies: "app/annies/*.fn.tsx",
   effies: "app/effies/*.fn.tsx",
   dev: {
-    // The leaderboard is designed for a 6:5 frame (1080×900) — keep that
-    // first so previews default to it. The scenes scale uniformly, so the
-    // taller social ratios work too.
+    // The original and slick cuts are designed for a 6:5 frame (1080×900) —
+    // keep that first so previews default to it. The split-flap "flap" cut is
+    // authored 16:9 (a departure board wants to be wide) — preview it at
+    // 1920×1080.
     resolutions: [
       { width: 1080, height: 900, label: "6:5" },
-      { width: 1080, height: 1350, label: "4:5" },
-      { width: 1080, height: 1920, label: "9:16" },
+      { width: 1920, height: 1080, label: "16:9" },
     ],
   },
 });
