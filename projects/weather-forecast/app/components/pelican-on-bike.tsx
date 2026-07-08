@@ -15,10 +15,14 @@ const CRANK_LEN = 14;
 const CHAINRING_R = 9;
 const SPROCKET_R = 5;
 
-const HIP_NEAR = { x: 117, y: 78 };
-const HIP_FAR = { x: 112, y: 79 };
-const THIGH = 42;
-const SHIN = 46;
+const HIP_NEAR = { x: 116, y: 73 };
+const HIP_FAR = { x: 111, y: 74 };
+// Bone lengths are sized so the leg can always reach the pedal through the
+// full crank orbit + body bob (worst-case hip→pedal ≈ 99). If THIGH + SHIN
+// drops below that, the IK clamps the leg dead-straight at the bottom of the
+// stroke and snaps back when the foot returns in reach.
+const THIGH = 50;
+const SHIN = 56;
 
 const STROKE_DARK = "#1d2530";
 const FRAME_DARK = "#181f2a";
@@ -61,13 +65,14 @@ export function PelicanOnBike({
       <Defs />
       <Shadow />
       <SpeedLines progress={progress} />
+      <Leg hip={HIP_FAR} foot={pedalB} isNear={false} bobOffset={bobOffset} />
       <Bike
         wheelAngle={wheelAngle}
         crankRad={crankRad}
         pedalA={pedalA}
         pedalB={pedalB}
       />
-      <Leg hip={HIP_FAR} foot={pedalB} isNear={false} bobOffset={bobOffset} />
+      <Leg hip={HIP_NEAR} foot={pedalA} isNear={true} bobOffset={bobOffset} />
       <Pelican
         bobOffset={bobOffset}
         wingFlap={wingFlap}
@@ -77,7 +82,6 @@ export function PelicanOnBike({
         crestWiggle={crestWiggle}
         pouchSway={pouchSway}
       />
-      <Leg hip={HIP_NEAR} foot={pedalA} isNear={true} bobOffset={bobOffset} />
     </svg>
   );
 }
@@ -633,20 +637,38 @@ function Leg({
 }) {
   const hipBob = { x: hip.x, y: hip.y + bobOffset };
   const knee = computeKnee(hipBob, foot, THIGH, SHIN, 1);
+  // `ankle` is where the feathered thigh gives way to the bare orange tarsus —
+  // the visible joint of a bird's leg.
+  const ankle = {
+    x: hipBob.x + (knee.x - hipBob.x) * 0.55,
+    y: hipBob.y + (knee.y - hipBob.y) * 0.55,
+  };
+  // The feathered thigh's wide end is anchored up-and-back from the hip, deep
+  // inside the body, rather than at the hip itself. That keeps the blunt top
+  // buried behind the body silhouette through the whole pedal cycle (anchoring
+  // it at the shallow hip let a corner swing out below the belly mid-stroke),
+  // and angles the visible thigh upward into the body.
+  const thighTop = { x: hipBob.x - 3, y: hipBob.y - 12 };
 
   const legColor = isNear ? "url(#legGrad)" : "#6b3a04";
+  const thighFill = isNear ? "url(#bodyGrad)" : "#aab4c1";
   const footFill = isNear ? "#d97a0e" : "#6b3a04";
   const footEdge = isNear ? "#7a4506" : "#3a2002";
 
   return (
     <g>
+      <path
+        d={taperedLimb(thighTop, ankle, 17, 4.5, 2.5)}
+        fill={thighFill}
+        strokeLinejoin="round"
+      />
       <line
-        x1={hipBob.x}
-        y1={hipBob.y}
+        x1={ankle.x}
+        y1={ankle.y}
         x2={knee.x}
         y2={knee.y}
         stroke={legColor}
-        strokeWidth="2.2"
+        strokeWidth="2.4"
         strokeLinecap="round"
       />
       <line
@@ -658,7 +680,7 @@ function Leg({
         strokeWidth="1.8"
         strokeLinecap="round"
       />
-      <circle cx={knee.x} cy={knee.y} r="1.1" fill={legColor} />
+      <circle cx={knee.x} cy={knee.y} r="1.3" fill={legColor} />
       <path
         d={
           `M ${foot.x - 1.8} ${foot.y - 0.8}` +
@@ -687,6 +709,40 @@ function Leg({
         strokeWidth="0.3"
       />
     </g>
+  );
+}
+
+// A limb segment that tapers from width `wA` at `a` to `wB` at `b`, with a
+// rounded cap at the `b` end. `bulge` bows the long sides convex so the shape
+// reads as a soft, rounded mass (a feathered thigh) rather than a flat wedge.
+function taperedLimb(
+  a: Point,
+  b: Point,
+  wA: number,
+  wB: number,
+  bulge = 0,
+): string {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len;
+  const uy = dy / len;
+  const nx = -uy;
+  const ny = ux;
+  const aL = { x: a.x + nx * (wA / 2), y: a.y + ny * (wA / 2) };
+  const aR = { x: a.x - nx * (wA / 2), y: a.y - ny * (wA / 2) };
+  const bL = { x: b.x + nx * (wB / 2), y: b.y + ny * (wB / 2) };
+  const bR = { x: b.x - nx * (wB / 2), y: b.y - ny * (wB / 2) };
+  const bTip = { x: b.x + ux * (wB / 2), y: b.y + uy * (wB / 2) };
+  const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  const bow = bulge + (wA + wB) / 4;
+  const cL = { x: mid.x + nx * bow, y: mid.y + ny * bow };
+  const cR = { x: mid.x - nx * bow, y: mid.y - ny * bow };
+  return (
+    `M ${aL.x} ${aL.y}` +
+    ` Q ${cL.x} ${cL.y} ${bL.x} ${bL.y}` +
+    ` Q ${bTip.x} ${bTip.y} ${bR.x} ${bR.y}` +
+    ` Q ${cR.x} ${cR.y} ${aR.x} ${aR.y} Z`
   );
 }
 
@@ -735,16 +791,16 @@ function Pelican({
       <g transform={`translate(0 ${tailTwitch})`}>
         <Tail />
       </g>
-      <Body />
-      <g transform={`translate(0 ${wingFlap})`}>
-        <Wing />
-      </g>
       <Head
         beakOpen={beakOpen}
         blink={blink}
         crestWiggle={crestWiggle}
         pouchSway={pouchSway}
       />
+      <Body />
+      <g transform={`translate(0 ${wingFlap})`}>
+        <Wing />
+      </g>
     </g>
   );
 }
@@ -918,15 +974,22 @@ function Head({
   return (
     <g>
       <path
-        d="M 128 50 Q 134 32 152 20 L 162 24 Q 148 38 138 56 Z"
+        d="M 120 45 Q 133 29 150 19 L 162 23 Q 151 41 140 59 Q 129 56 120 45 Z"
         fill="url(#bodyGrad)"
       />
       <path
-        d="M 138 56 Q 148 38 162 24"
+        d="M 140 59 Q 151 41 162 23"
         stroke="#bcc6d2"
         strokeWidth="0.6"
         fill="none"
         opacity="0.5"
+      />
+      <path
+        d="M 124 47 Q 134 33 149 22"
+        stroke="#cdd5df"
+        strokeWidth="0.5"
+        fill="none"
+        opacity="0.45"
       />
       <ellipse
         cx="160"
