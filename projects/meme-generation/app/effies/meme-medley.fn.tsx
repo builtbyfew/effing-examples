@@ -23,6 +23,19 @@ const SEGMENT_DURATION = 5;
 const ANNIE_DURATION = SEGMENT_DURATION - 2;
 const TRANSITION_DURATION = 0.6;
 
+// The screaming marmot clip (750×500, 12.5 fps, 6.16 s) contains three shots,
+// each with exactly one scream. One caption per scream: revealed the moment
+// the mouth opens, hidden again at the shot cut.
+const MARMOT_VIDEO_URL =
+  "https://media4.giphy.com/media/R8rRQmDIewbRPeJl0H/giphy-hd.mp4";
+const MARMOT_DURATION = 6.16;
+const MARMOT_SCREAMS = [
+  { text: "Pixels!", start: 0.4, until: 2.16 },
+  { text: "Frames!", start: 2.6, until: 4.48 },
+  { text: "Effing videos!", start: 4.85, until: MARMOT_DURATION },
+];
+const MARMOT_CAPTION_REVEAL_SECONDS = 0.35;
+
 export async function runner({
   bounds: { width, height },
 }: RunnerArgs<MemeMedleyProps>): EffieRunnerReturn {
@@ -163,6 +176,29 @@ export async function runner({
     ),
   ]);
 
+  // Subtitle-style captions over the marmot video: all bottom-anchored, so
+  // each scream's line replaces the previous one in the same spot.
+  const marmotCaptionAnnies = await Promise.all(
+    MARMOT_SCREAMS.map(({ text, start, until }) => {
+      const windowSeconds = until - start;
+      return fnUrl(
+        "annie",
+        "meme-top-bottom-caption",
+        {
+          text,
+          fontSize: Math.round(width * 0.105),
+          anchor: "bottom",
+          offsetY: Math.round(height * 0.06),
+          paddingX: Math.round(width * 0.035),
+          startDelayFrac: 0,
+          revealFrac: Math.min(1, MARMOT_CAPTION_REVEAL_SECONDS / windowSeconds),
+          frameCount: Math.round(windowSeconds * FPS),
+        } satisfies MemeTopBottomCaptionProps,
+        { width, height },
+      );
+    }),
+  );
+
   return effieData({
     width,
     height,
@@ -232,6 +268,20 @@ export async function runner({
             delay: TRANSITION_DURATION,
           },
         ],
+      }),
+      // Finale: the marmot clip plays as the segment background (FFS
+      // cover-scales and center-crops it, and the marmot stays in frame at
+      // every scream). A hard cut instead of a transition — the first scream
+      // starts 0.4 s in and would otherwise be buried in the blend.
+      effieSegment({
+        duration: MARMOT_DURATION,
+        background: { type: "video", source: MARMOT_VIDEO_URL },
+        layers: MARMOT_SCREAMS.map(({ start, until }, i) => ({
+          type: "animation" as const,
+          source: marmotCaptionAnnies[i],
+          delay: start,
+          until,
+        })),
       }),
     ],
   });
