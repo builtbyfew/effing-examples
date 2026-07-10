@@ -71,10 +71,10 @@ const SCREAM_TIMINGS = [
 // `seek` field is not applied), so the timeline is split at the screams
 // rather than at the shot cuts. The default last voice line (2.08 s)
 // outlasts what remains of the clip, so the final segment runs past the
-// clip end, freezing on the clip's poster still while the scream rings out
-// (also hiding the background video wrapping around to the first shot).
-// Voice lines up to ~2.35 s fit before the outro ends.
-const OUTRO_SECONDS = 0.92;
+// clip end while the scream rings out; the background video wraps around
+// to the first shot — the marmot winding up again, like the GIF looping —
+// with the caption held on top.
+const OUTRO_SECONDS = 0.65;
 
 export async function runner({
   props: { screams = DEFAULT_SCREAMS },
@@ -88,7 +88,7 @@ export async function runner({
     paddingX: Math.round(width * 0.035),
   };
 
-  const [cover, outroStill, ...captionAnnies] = await Promise.all([
+  const [cover, ...captionAnnies] = await Promise.all([
     // Cover = the clip's poster still with the punchline, cover-cropped
     // full-bleed like the video itself.
     fnUrl(
@@ -99,14 +99,6 @@ export async function runner({
         caption: screams[2].caption,
         ...captionLayout,
       } satisfies MemePhotoCaptionProps,
-      { width, height },
-    ),
-    // The outro freeze-frame: same still, no caption — the last caption
-    // annie holds on top of it, so the text doesn't jump at the freeze.
-    fnUrl(
-      "image",
-      "meme-photo-caption",
-      { imageUrl: STILL_URL } satisfies MemePhotoCaptionProps,
       { width, height },
     ),
     ...SCREAM_TIMINGS.map(({ start, shotCut }, i) => {
@@ -161,19 +153,9 @@ export async function runner({
           },
           audio: { source: effieWebUrl(screams[i].audioUrl) },
           layers: [
-            // The freeze-frame goes under the caption; the caption annie has
-            // no `until` on the last scream, so its final frame holds over
-            // the freeze until the end (FFmpeg repeats a finished overlay's
-            // last frame).
-            ...(i === SCREAM_TIMINGS.length - 1
-              ? [
-                  {
-                    type: "image" as const,
-                    source: outroStill,
-                    from: CLIP_DURATION - segmentStart,
-                  },
-                ]
-              : []),
+            // No `until` on the last scream: its final frame holds over the
+            // wrapped-around video until the end (FFmpeg repeats a finished
+            // overlay's last frame).
             {
               type: "animation",
               source: captionAnnies[i],
