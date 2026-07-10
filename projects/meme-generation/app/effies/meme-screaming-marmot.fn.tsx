@@ -6,16 +6,16 @@ import type { MemePhotoCaptionProps } from "~/images/meme-photo-caption.fn";
 import type { MemeTopBottomCaptionProps } from "~/annies/meme-top-bottom-caption.fn";
 
 export const propsSchema = z.object({
-  // One entry per scream, in clip order: the caption text and the matching
-  // voice line. `audioLead` is the MP3's leading silence in seconds — the
-  // scream's segment starts that much early so the voice onset lands exactly
-  // on the mouth opening. It must stay below the first scream's start time
-  // (0.4 s), hence the cap.
+  // One entry per scream, in clip order: the caption text and optionally a
+  // matching voice line (omit `audioUrl` for a silent scream). `audioLead`
+  // is the MP3's leading silence in seconds — the scream's segment starts
+  // that much early so the voice onset lands exactly on the mouth opening.
+  // It must stay below the first scream's start time (0.4 s), hence the cap.
   screams: z
     .array(
       z.object({
         caption: z.string(),
-        audioUrl: z.string().url(),
+        audioUrl: z.string().url().optional(),
         audioLead: z.number().min(0).max(0.3).optional(),
       }),
     )
@@ -117,7 +117,9 @@ export async function runner({
     }),
   ]);
 
-  const audioLeads = screams.map(({ audioLead }) => audioLead ?? 0);
+  const audioLeads = screams.map(({ audioUrl, audioLead }) =>
+    audioUrl ? (audioLead ?? 0) : 0,
+  );
   const segmentStarts = SCREAM_TIMINGS.map(
     ({ start }, i) => start - audioLeads[i],
   );
@@ -140,6 +142,7 @@ export async function runner({
         const isLast = i === SCREAM_TIMINGS.length - 1;
         const segmentStart = segmentStarts[i];
         const segmentEnd = isLast ? CLIP_DURATION : segmentStarts[i + 1];
+        const audioUrl = screams[i].audioUrl;
         return effieSegment({
           duration: segmentEnd - segmentStart,
           background: {
@@ -147,7 +150,7 @@ export async function runner({
             source: "#marmot",
             seek: segmentStart,
           },
-          audio: { source: effieWebUrl(screams[i].audioUrl) },
+          ...(audioUrl ? { audio: { source: effieWebUrl(audioUrl) } } : {}),
           layers: [
             {
               type: "animation",
