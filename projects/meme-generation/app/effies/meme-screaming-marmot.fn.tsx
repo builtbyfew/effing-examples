@@ -69,12 +69,10 @@ const SCREAM_TIMINGS = [
 
 // FFS plays segment audio from the segment's start (the per-segment audio
 // `seek` field is not applied), so the timeline is split at the screams
-// rather than at the shot cuts. The default last voice line (2.08 s)
-// outlasts what remains of the clip, so the final segment runs past the
-// clip end while the scream rings out; the background video wraps around
-// to the first shot — the marmot winding up again, like the GIF looping —
-// with the caption held on top.
-const OUTRO_SECONDS = 0.65;
+// rather than at the shot cuts. The video ends exactly at the clip end;
+// the default last voice line outlasts it slightly, so its decaying tail
+// is faded out as the video ends.
+const LAST_SCREAM_FADE_OUT = 0.3;
 
 export async function runner({
   props: { screams = DEFAULT_SCREAMS },
@@ -139,11 +137,9 @@ export async function runner({
         layers: [],
       }),
       ...SCREAM_TIMINGS.map(({ shotCut }, i) => {
+        const isLast = i === SCREAM_TIMINGS.length - 1;
         const segmentStart = segmentStarts[i];
-        const segmentEnd =
-          i < SCREAM_TIMINGS.length - 1
-            ? segmentStarts[i + 1]
-            : CLIP_DURATION + OUTRO_SECONDS;
+        const segmentEnd = isLast ? CLIP_DURATION : segmentStarts[i + 1];
         return effieSegment({
           duration: segmentEnd - segmentStart,
           background: {
@@ -151,18 +147,16 @@ export async function runner({
             source: "#marmot",
             seek: segmentStart,
           },
-          audio: { source: effieWebUrl(screams[i].audioUrl) },
+          audio: {
+            source: effieWebUrl(screams[i].audioUrl),
+            ...(isLast ? { fadeOut: LAST_SCREAM_FADE_OUT } : {}),
+          },
           layers: [
-            // No `until` on the last scream: its final frame holds over the
-            // wrapped-around video until the end (FFmpeg repeats a finished
-            // overlay's last frame).
             {
               type: "animation",
               source: captionAnnies[i],
               delay: audioLeads[i],
-              ...(i < SCREAM_TIMINGS.length - 1
-                ? { until: shotCut - segmentStart }
-                : {}),
+              until: shotCut - segmentStart,
             },
           ],
         });
