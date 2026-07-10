@@ -21,8 +21,8 @@ export default defineConfig({
       { width: 1080, height: 1080, label: "1:1" },
       { width: 1080, height: 1350, label: "4:5" },
       { width: 1080, height: 1920, label: "9:16" },
-      // Native resolution of the screaming-marmot clip.
-      { width: 750, height: 500, label: "3:2" },
+      // Native aspect ratio of the screaming-marmot clip (750×500).
+      { width: 1080, height: 720, label: "3:2" },
     ],
   },
 });
