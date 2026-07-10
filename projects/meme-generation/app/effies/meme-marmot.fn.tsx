@@ -22,7 +22,7 @@ export const propsSchema = z.object({
     .length(3)
     .optional(),
 });
-type MemeScreamingMarmotProps = z.infer<typeof propsSchema>;
+type MemeMarmotProps = z.infer<typeof propsSchema>;
 
 const DEFAULT_SCREAMS = [
   {
@@ -45,7 +45,7 @@ const DEFAULT_SCREAMS = [
   },
 ];
 
-export const previewProps: MemeScreamingMarmotProps = {
+export const previewProps: MemeMarmotProps = {
   screams: DEFAULT_SCREAMS,
 };
 
@@ -77,7 +77,7 @@ const SCREAM_TIMINGS = [
 export async function runner({
   props: { screams = DEFAULT_SCREAMS },
   bounds: { width, height },
-}: RunnerArgs<MemeScreamingMarmotProps>): EffieRunnerReturn {
+}: RunnerArgs<MemeMarmotProps>): EffieRunnerReturn {
   // Shared by the caption annies and the cover so the caption sits in the
   // same spot everywhere.
   const captionLayout = {
