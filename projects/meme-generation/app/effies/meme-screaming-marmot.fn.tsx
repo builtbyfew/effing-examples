@@ -41,27 +41,25 @@ const SCREAMS = [
   {
     start: 0.4,
     shotCut: 2.16,
-    audioUrl:
-      "https://static.effing.dev/elevenlabs/marmot/screaming_pixels.mp3",
-    audioLead: 0.18,
+    audioUrl: "https://static.effing.dev/elevenlabs/marmot/marmot_pixels.mp3",
+    audioLead: 0.16,
   },
   {
     start: 2.6,
     shotCut: 4.48,
-    audioUrl:
-      "https://static.effing.dev/elevenlabs/marmot/screaming_frames.mp3",
+    audioUrl: "https://static.effing.dev/elevenlabs/marmot/marmot_frames.mp3",
     audioLead: 0,
   },
   {
     start: 4.85,
     shotCut: CLIP_DURATION,
     audioUrl:
-      "https://static.effing.dev/elevenlabs/marmot/screaming_effing_videos.mp3",
-    audioLead: 0.17,
+      "https://static.effing.dev/elevenlabs/marmot/marmot_effing_videos.mp3",
+    audioLead: 0.14,
   },
 ];
 
-// The last voice line (2.12 s) outlasts what remains of the clip, so the
+// The last voice line (2.08 s) outlasts what remains of the clip, so the
 // final segment runs past the clip end and the cover card holds as an outro
 // while the scream rings out (also hiding the background video wrapping
 // around to the first shot).
