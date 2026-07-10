@@ -6,15 +6,45 @@ import type { MemeTopBottomProps } from "~/images/meme-top-bottom.fn";
 import type { MemeTopBottomCaptionProps } from "~/annies/meme-top-bottom-caption.fn";
 
 export const propsSchema = z.object({
-  // One caption per scream, in clip order.
-  captions: z.array(z.string()).length(3).optional(),
+  // One entry per scream, in clip order: the caption text and the matching
+  // voice line. `audioLead` is the MP3's leading silence in seconds — the
+  // scream's segment starts that much early so the voice onset lands exactly
+  // on the mouth opening. It must stay below the first scream's start time
+  // (0.4 s), hence the cap.
+  screams: z
+    .array(
+      z.object({
+        caption: z.string(),
+        audioUrl: z.string().url(),
+        audioLead: z.number().min(0).max(0.3).optional(),
+      }),
+    )
+    .length(3)
+    .optional(),
 });
 type MemeScreamingMarmotProps = z.infer<typeof propsSchema>;
 
-const DEFAULT_CAPTIONS = ["Pixels!", "Frames!", "Effing videos!"];
+const DEFAULT_SCREAMS = [
+  {
+    caption: "Pixels!",
+    audioUrl: "https://static.effing.dev/elevenlabs/marmot/marmot_pixels.mp3",
+    audioLead: 0.16,
+  },
+  {
+    caption: "Frames!",
+    audioUrl: "https://static.effing.dev/elevenlabs/marmot/marmot_frames.mp3",
+    audioLead: 0,
+  },
+  {
+    caption: "Effing videos!",
+    audioUrl:
+      "https://static.effing.dev/elevenlabs/marmot/marmot_effing_videos.mp3",
+    audioLead: 0.14,
+  },
+];
 
 export const previewProps: MemeScreamingMarmotProps = {
-  captions: DEFAULT_CAPTIONS,
+  screams: DEFAULT_SCREAMS,
 };
 
 const FPS = 30;
@@ -31,42 +61,23 @@ const VIDEO_URL =
 const STILL_URL =
   "https://media4.giphy.com/media/R8rRQmDIewbRPeJl0H/480w_s.jpg";
 const CLIP_DURATION = 6.16;
-
-// Each scream also has a voice line. FFS plays segment audio from the
-// segment's start (the per-segment audio `seek` field is not applied), so
-// the timeline is split at the screams rather than at the shot cuts, and
-// each scream's segment starts `audioLead` (the MP3's leading silence)
-// early so the voice onset lands exactly on the mouth opening.
-const SCREAMS = [
-  {
-    start: 0.4,
-    shotCut: 2.16,
-    audioUrl: "https://static.effing.dev/elevenlabs/marmot/marmot_pixels.mp3",
-    audioLead: 0.16,
-  },
-  {
-    start: 2.6,
-    shotCut: 4.48,
-    audioUrl: "https://static.effing.dev/elevenlabs/marmot/marmot_frames.mp3",
-    audioLead: 0,
-  },
-  {
-    start: 4.85,
-    shotCut: CLIP_DURATION,
-    audioUrl:
-      "https://static.effing.dev/elevenlabs/marmot/marmot_effing_videos.mp3",
-    audioLead: 0.14,
-  },
+const SCREAM_TIMINGS = [
+  { start: 0.4, shotCut: 2.16 },
+  { start: 2.6, shotCut: 4.48 },
+  { start: 4.85, shotCut: CLIP_DURATION },
 ];
 
-// The last voice line (2.08 s) outlasts what remains of the clip, so the
-// final segment runs past the clip end and the cover card holds as an outro
-// while the scream rings out (also hiding the background video wrapping
-// around to the first shot).
+// FFS plays segment audio from the segment's start (the per-segment audio
+// `seek` field is not applied), so the timeline is split at the screams
+// rather than at the shot cuts. The default last voice line (2.08 s)
+// outlasts what remains of the clip, so the final segment runs past the
+// clip end and the cover card holds as an outro while the scream rings out
+// (also hiding the background video wrapping around to the first shot).
+// Voice lines up to ~2.35 s fit before the outro ends.
 const OUTRO_SECONDS = 0.92;
 
 export async function runner({
-  props: { captions = DEFAULT_CAPTIONS },
+  props: { screams = DEFAULT_SCREAMS },
   bounds: { width, height },
 }: RunnerArgs<MemeScreamingMarmotProps>): EffieRunnerReturn {
   const [cover, ...captionAnnies] = await Promise.all([
@@ -78,17 +89,17 @@ export async function runner({
       "meme-top-bottom",
       {
         imageUrl: STILL_URL,
-        bottomText: captions[2],
+        bottomText: screams[2].caption,
       } satisfies MemeTopBottomProps,
       { width, height },
     ),
-    ...SCREAMS.map(({ start, shotCut }, i) => {
+    ...SCREAM_TIMINGS.map(({ start, shotCut }, i) => {
       const windowSeconds = shotCut - start;
       return fnUrl(
         "annie",
         "meme-top-bottom-caption",
         {
-          text: captions[i],
+          text: screams[i].caption,
           fontSize: Math.round(width * 0.105),
           anchor: "bottom",
           offsetY: Math.round(height * 0.06),
@@ -102,7 +113,10 @@ export async function runner({
     }),
   ]);
 
-  const segmentStarts = SCREAMS.map(({ start, audioLead }) => start - audioLead);
+  const audioLeads = screams.map(({ audioLead }) => audioLead ?? 0);
+  const segmentStarts = SCREAM_TIMINGS.map(
+    ({ start }, i) => start - audioLeads[i],
+  );
 
   return effieData({
     width,
@@ -118,10 +132,10 @@ export async function runner({
         background: { type: "video", source: "#marmot" },
         layers: [],
       }),
-      ...SCREAMS.map(({ start, shotCut, audioUrl, audioLead }, i) => {
+      ...SCREAM_TIMINGS.map(({ shotCut }, i) => {
         const segmentStart = segmentStarts[i];
         const segmentEnd =
-          i < SCREAMS.length - 1
+          i < SCREAM_TIMINGS.length - 1
             ? segmentStarts[i + 1]
             : CLIP_DURATION + OUTRO_SECONDS;
         return effieSegment({
@@ -131,15 +145,15 @@ export async function runner({
             source: "#marmot",
             seek: segmentStart,
           },
-          audio: { source: effieWebUrl(audioUrl) },
+          audio: { source: effieWebUrl(screams[i].audioUrl) },
           layers: [
             {
               type: "animation",
               source: captionAnnies[i],
-              delay: audioLead,
+              delay: audioLeads[i],
               until: shotCut - segmentStart,
             },
-            ...(i === SCREAMS.length - 1
+            ...(i === SCREAM_TIMINGS.length - 1
               ? [
                   {
                     type: "image" as const,
