@@ -2,7 +2,7 @@ import { z } from "zod";
 import { effieData, effieSegment, effieWebUrl } from "@effing/effie";
 import { fnUrl } from "@effing/fn";
 import type { RunnerArgs, EffieRunnerReturn } from "@effing/fn";
-import type { MemeTopBottomProps } from "~/images/meme-top-bottom.fn";
+import type { MemePhotoCaptionProps } from "~/images/meme-photo-caption.fn";
 import type { MemeTopBottomCaptionProps } from "~/annies/meme-top-bottom-caption.fn";
 
 export const propsSchema = z.object({
@@ -71,7 +71,7 @@ const SCREAM_TIMINGS = [
 // `seek` field is not applied), so the timeline is split at the screams
 // rather than at the shot cuts. The default last voice line (2.08 s)
 // outlasts what remains of the clip, so the final segment runs past the
-// clip end and the cover card holds as an outro while the scream rings out
+// clip end, freezing on the clip's poster still while the scream rings out
 // (also hiding the background video wrapping around to the first shot).
 // Voice lines up to ~2.35 s fit before the outro ends.
 const OUTRO_SECONDS = 0.92;
@@ -80,17 +80,33 @@ export async function runner({
   props: { screams = DEFAULT_SCREAMS },
   bounds: { width, height },
 }: RunnerArgs<MemeScreamingMarmotProps>): EffieRunnerReturn {
-  const [cover, ...captionAnnies] = await Promise.all([
-    // Cover = the clip's poster still with the punchline, in the project's
-    // usual letterboxed-over-blurred-fill treatment. Doubles as the outro
-    // card of the final segment.
+  // Shared by the caption annies and the cover so the caption sits in the
+  // same spot everywhere.
+  const captionLayout = {
+    fontSize: Math.round(width * 0.105),
+    offsetY: Math.round(height * 0.06),
+    paddingX: Math.round(width * 0.035),
+  };
+
+  const [cover, outroStill, ...captionAnnies] = await Promise.all([
+    // Cover = the clip's poster still with the punchline, cover-cropped
+    // full-bleed like the video itself.
     fnUrl(
       "image",
-      "meme-top-bottom",
+      "meme-photo-caption",
       {
         imageUrl: STILL_URL,
-        bottomText: screams[2].caption,
-      } satisfies MemeTopBottomProps,
+        caption: screams[2].caption,
+        ...captionLayout,
+      } satisfies MemePhotoCaptionProps,
+      { width, height },
+    ),
+    // The outro freeze-frame: same still, no caption — the last caption
+    // annie holds on top of it, so the text doesn't jump at the freeze.
+    fnUrl(
+      "image",
+      "meme-photo-caption",
+      { imageUrl: STILL_URL } satisfies MemePhotoCaptionProps,
       { width, height },
     ),
     ...SCREAM_TIMINGS.map(({ start, shotCut }, i) => {
@@ -100,10 +116,8 @@ export async function runner({
         "meme-top-bottom-caption",
         {
           text: screams[i].caption,
-          fontSize: Math.round(width * 0.105),
           anchor: "bottom",
-          offsetY: Math.round(height * 0.06),
-          paddingX: Math.round(width * 0.035),
+          ...captionLayout,
           startDelayFrac: 0,
           revealFrac: Math.min(1, 0.35 / windowSeconds),
           frameCount: Math.round(windowSeconds * FPS),
@@ -147,21 +161,27 @@ export async function runner({
           },
           audio: { source: effieWebUrl(screams[i].audioUrl) },
           layers: [
-            {
-              type: "animation",
-              source: captionAnnies[i],
-              delay: audioLeads[i],
-              until: shotCut - segmentStart,
-            },
+            // The freeze-frame goes under the caption; the caption annie has
+            // no `until` on the last scream, so its final frame holds over
+            // the freeze until the end (FFmpeg repeats a finished overlay's
+            // last frame).
             ...(i === SCREAM_TIMINGS.length - 1
               ? [
                   {
                     type: "image" as const,
-                    source: cover,
+                    source: outroStill,
                     from: CLIP_DURATION - segmentStart,
                   },
                 ]
               : []),
+            {
+              type: "animation",
+              source: captionAnnies[i],
+              delay: audioLeads[i],
+              ...(i < SCREAM_TIMINGS.length - 1
+                ? { until: shotCut - segmentStart }
+                : {}),
+            },
           ],
         });
       }),
