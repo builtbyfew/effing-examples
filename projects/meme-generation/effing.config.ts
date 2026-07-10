@@ -15,10 +15,14 @@ export default defineConfig({
   //   host: "127.0.0.1",
   //   port: 3839, // 3839 = 0xEFF, how effing cool is that? ʘ‿ʘ
   //   ffs: true, // auto-start FFS sidecar (when installed)
-  //   resolutions: [
-  //     { width: 1080, height: 1080, label: "1:1" },
-  //     { width: 1080, height: 1350, label: "4:5" },
-  //     { width: 1080, height: 1920, label: "9:16" },
-  //   ],
   // },
+  dev: {
+    resolutions: [
+      { width: 1080, height: 1080, label: "1:1" },
+      { width: 1080, height: 1350, label: "4:5" },
+      { width: 1080, height: 1920, label: "9:16" },
+      // Native aspect ratio of the screaming-marmot clip (750×500).
+      { width: 1080, height: 720, label: "3:2" },
+    ],
+  },
 });
