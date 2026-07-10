@@ -37,9 +37,11 @@ const DEFAULT_SCREAMS = [
   },
   {
     caption: "Effing videos!",
+    // Sped up 1.4× (ffmpeg atempo) from marmot_effing_videos.mp3 so the
+    // scream finishes right at the clip end.
     audioUrl:
-      "https://static.effing.dev/elevenlabs/marmot/marmot_effing_videos.mp3",
-    audioLead: 0.14,
+      "https://static.effing.dev/elevenlabs/marmot/marmot_effing_videos_fast.mp3",
+    audioLead: 0.09,
   },
 ];
 
@@ -69,10 +71,8 @@ const SCREAM_TIMINGS = [
 
 // FFS plays segment audio from the segment's start (the per-segment audio
 // `seek` field is not applied), so the timeline is split at the screams
-// rather than at the shot cuts. The video ends exactly at the clip end;
-// the default last voice line outlasts it slightly, so its decaying tail
-// is faded out as the video ends.
-const LAST_SCREAM_FADE_OUT = 0.3;
+// rather than at the shot cuts. The video ends exactly at the clip end,
+// and each default voice line finishes before its segment does.
 
 export async function runner({
   props: { screams = DEFAULT_SCREAMS },
@@ -147,10 +147,7 @@ export async function runner({
             source: "#marmot",
             seek: segmentStart,
           },
-          audio: {
-            source: effieWebUrl(screams[i].audioUrl),
-            ...(isLast ? { fadeOut: LAST_SCREAM_FADE_OUT } : {}),
-          },
+          audio: { source: effieWebUrl(screams[i].audioUrl) },
           layers: [
             {
               type: "animation",
