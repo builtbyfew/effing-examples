@@ -62,7 +62,7 @@ leaderboard.
 
 ```bash
 npm install
-cp .env.example .env   # set SECRET_KEY
+cp .env.example .env
 npm run dev            # http://127.0.0.1:3839
 ```
 
