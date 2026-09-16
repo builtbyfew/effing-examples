@@ -6,7 +6,7 @@
   "packageManager": "pnpm@10.18.3",
   "pnpm": {
     "overrides": {
-      "@napi-rs/canvas": "^1.0.0"
+      "@napi-rs/canvas": "^1.0.9"
     }
   }
 }
