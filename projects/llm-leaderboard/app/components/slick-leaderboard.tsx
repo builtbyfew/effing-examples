@@ -425,6 +425,7 @@ function Subtitle({
           textTransform: "uppercase",
           color: C.dim,
           display: "flex",
+          whiteSpace: "pre",
         }}
       >
         {`${metric}   ·   ${valueLabel}`}
